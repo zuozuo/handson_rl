@@ -27,13 +27,13 @@
 
 ## 实验结果分析
 
-根据 Weights & Biases 平台记录的运行结果，不同算法的累积懊悔（regret）按性能从好到差排序为：
+根据 Weights & Biases 平台记录的运行结果，不同算法的累积懊悔（regret）按性能从好到差排序为（根据图表显示）：
 
-1. **Thompson Sampling** - 累积懊悔约 57
-2. **UCB** - 累积懊悔约 70
-3. **EpsilonGreedy(epsilon=0.0001)** - 累积懊悔相对较低
-4. **DecayingEpsilonGreedy** - 累积懊悔中等
-5. **其他更大 epsilon 值的 EpsilonGreedy 算法** - 累积懊悔较高
+1. **EpsilonGreedy(epsilon=0.0001)** - 累积懊悔最低，约 3.9
+2. **Thompson Sampling** - 累积懊悔约 57
+3. **UCB** - 累积懊悔约 70
+4. **DecayingEpsilonGreedy** - 累积懊悔约 150
+5. **其他更大 epsilon 值的 EpsilonGreedy 算法** - 累积懊悔更高
 
 ![算法性能比较图](https://wandb.ai/zuozuo/mab-experiments/workspace?nw=nwuserzuozuo&panelDisplayName=regret&panelSectionName=Charts)
 
@@ -58,9 +58,9 @@
 
 ## 总体结论
 
-1. **汤普森采样和 UCB 算法表现最佳**：这两种算法能够更智能地平衡探索与利用，这与理论预期一致。
+1. **极低探索率的 EpsilonGreedy 算法表现最佳**：在这个特定的实验中，EpsilonGreedy(epsilon=0.0001) 的性能超过了所有其他算法，这表明在当前条件下，非常有限的探索就足以获得良好的结果。
 
-2. **极低探索率的 epsilon-贪婪在特定问题上表现良好**：这说明在某些相对简单的问题中，过度探索可能会导致不必要的懊悔。
+2. **Thompson Sampling 和 UCB 算法表现相对较好**：这两种算法在理论上应能更智能地平衡探索与利用，但在本实验中的表现未能超过极低探索率的贪婪算法。
 
 3. **算法性能取决于具体问题**：这些结果是针对特定问题实例和参数设置的。在不同的环境、更复杂的问题或更长的时间尺度上，结果可能会有所不同。例如，在有大量拉杆或拉杆奖励分布更接近的情况下，具有适当探索策略的算法可能会表现得更好。
 
