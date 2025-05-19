@@ -44,29 +44,45 @@ def parse_args():
         default=1.0,
         help="UCB算法的系数，控制不确定性比重 (仅在algorithm=ucb或all时有效)"
     )
+    parser.add_argument(
+        "--steps",
+        type=int,
+        default=5000,
+        help="算法运行的步数"
+    )
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=10,
+        help="老虎机的拉杆数量"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=1,
+        help="随机种子"
+    )
     return parser.parse_args()
 
 
 def main():
-    # 解析命令行参数
     args = parse_args()
-    np.random.seed(1)  # 设定随机种子,使实验具有可重复性
-    K = 10
-    bandit_10_arm = BernoulliBandit(K)
-    print("随机生成了一个%d臂伯努利老虎机" % K)
-    print("获奖概率最大的拉杆为%d号,其获奖概率为%.4f" %
-          (bandit_10_arm.best_idx, bandit_10_arm.best_prob))
-
-    # 用于存储所有运行的求解器和名称，以便在运行所有算法时使用
+    np.random.seed(args.seed)  # 使用用户指定的随机种子
+    bandit_10_arm = BernoulliBandit(K=args.k)
+    print(f'随机生成了一个{args.k}臂伯努利老虎机')
+    print('获奖概率最大的拉杆为{}号,其获奖概率为{}'.format(
+        np.argmax(bandit_10_arm.probs) + 1, bandit_10_arm.probs[np.argmax(bandit_10_arm.probs)]))
+    
+    # 用于存储所有求解器和名称，以便在--algorithm all模式下最终比较
     all_solvers = []
     all_solver_names = []
 
     # 运行标准ε-贪婪算法
     if args.algorithm == "epsilon-greedy" or args.algorithm == "all":
-        np.random.seed(1)
+        np.random.seed(args.seed)
         epsilon = 0.01  # 设置 epsilon 值
         epsilon_greedy_solver = EpsilonGreedy(bandit_10_arm, epsilon=epsilon)
-        epsilon_greedy_solver.run(5000)
+        epsilon_greedy_solver.run(args.steps)
         print('epsilon-贪婪算法的累积懊悔为：', epsilon_greedy_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
@@ -95,7 +111,7 @@ def main():
         
         # 运行所有epsilon值的求解器
         for solver in epsilon_greedy_solver_list:
-            solver.run(5000)
+            solver.run(args.steps)
         
         # 关键修改：为每个不同的epsilon值生成单独的run记录
         # 这样在wandb界面上可以直接对比不同epsilon值的性能
@@ -133,9 +149,9 @@ def main():
     
     # 运行epsilon值衰减的贪婪算法
     if args.algorithm == "decaying-epsilon-greedy" or args.algorithm == "all":
-        np.random.seed(1)
+        np.random.seed(args.seed)
         decaying_epsilon_greedy_solver = DecayingEpsilonGreedy(bandit_10_arm)
-        decaying_epsilon_greedy_solver.run(5000)
+        decaying_epsilon_greedy_solver.run(args.steps)
         print('epsilon值衰减的贪婪算法的累积懊悔为：', decaying_epsilon_greedy_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
@@ -154,9 +170,9 @@ def main():
     
     # 运行UCB算法
     if args.algorithm == "ucb" or args.algorithm == "all":
-        np.random.seed(1)
+        np.random.seed(args.seed)
         ucb_solver = UCB(bandit_10_arm, coef=args.ucb_coef)
-        ucb_solver.run(5000)
+        ucb_solver.run(args.steps)
         print('UCB算法的累积懊悔为：', ucb_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
@@ -175,9 +191,9 @@ def main():
     
     # 运行汤普森采样算法
     if args.algorithm == "thompson-sampling" or args.algorithm == "all":
-        np.random.seed(1)
+        np.random.seed(args.seed)
         thompson_sampling_solver = ThompsonSampling(bandit_10_arm)
-        thompson_sampling_solver.run(5000)
+        thompson_sampling_solver.run(args.steps)
         print('汤普森采样算法的累积懊悔为：', thompson_sampling_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
