@@ -2,6 +2,8 @@
 
 这个项目实现了几种经典的多臂老虎机（Multi-Armed Bandit, MAB）算法，并提供了用于比较它们性能的工具。
 
+该项目代码基于[《动手学深度强化学习》](https://hrl.boyuai.com/chapter/1/%E5%A4%9A%E8%87%82%E8%80%81%E8%99%8E%E6%9C%BA)中的实现，并进行了扫展和重构。
+
 ## 项目结构
 
 项目包含以下文件：
@@ -144,5 +146,6 @@ wandb login
 
 ## 参考资料
 
+- [动手学深度强化学习 - 多臂老虎机](https://hrl.boyuai.com/chapter/1/%E5%A4%9A%E8%87%82%E8%80%81%E8%99%8E%E6%9C%BA)
 - Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction. MIT press.
 - Multi-Armed Bandit Problem: https://en.wikipedia.org/wiki/Multi-armed_bandit
