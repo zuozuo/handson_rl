@@ -86,21 +86,42 @@ def main():
             EpsilonGreedy(bandit_10_arm, epsilon=e) for e in epsilons
         ]
         epsilon_greedy_solver_names = ["epsilon={}".format(e) for e in epsilons]
+        
+        # 运行所有epsilon值的求解器
         for solver in epsilon_greedy_solver_list:
             solver.run(5000)
         
-        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
-        run_name_suffix = ""
-        if args.algorithm == "all":
-            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        # 关键修改：为每个不同的epsilon值生成单独的run记录
+        # 这样在wandb界面上可以直接对比不同epsilon值的性能
+        for idx, (solver, solver_name) in enumerate(zip(epsilon_greedy_solver_list, epsilon_greedy_solver_names)):
+            run_name_suffix = ""
+            if args.algorithm == "all":
+                run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+            
+            # 为每个epsilon值生成一个单独的run
+            epsilon_run_name = f"EpsilonGreedy-{solver_name}{run_name_suffix}"
+            if args.run_name:
+                epsilon_run_name = f"{args.run_name}-{solver_name}{run_name_suffix}"
+            
+            plot_results(
+                [solver], 
+                [solver_name],
+                backend=args.backend,
+                run_name=epsilon_run_name,
+                project_name=args.project_name
+            )
+            
+            print(f'完成运行 {solver_name} 的累积懊悔为：{solver.regret}')
         
-        plot_results(
-            epsilon_greedy_solver_list, 
-            epsilon_greedy_solver_names,
-            backend=args.backend,
-            run_name=(args.run_name + run_name_suffix if args.run_name else "EpsilonComparison" + run_name_suffix),
-            project_name=args.project_name
-        )
+        # 如果是单独运行所有对比，而不是在all模式下，还可以生成一个汇总进行本地显示
+        if args.algorithm == "epsilon-comparison" and args.backend == "local":
+            # 绘制本地比较图，仅当使用本地后端时
+            plot_results(
+                epsilon_greedy_solver_list, 
+                epsilon_greedy_solver_names,
+                backend="local",  # 强制使用本地后端显示汇总图
+                project_name=args.project_name
+            )
         
         # 如果运行所有算法，我们选择最佳的epsilon值添加到对比列表中
         if args.algorithm == "all":
