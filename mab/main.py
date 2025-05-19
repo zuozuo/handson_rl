@@ -68,16 +68,12 @@ def main():
         epsilon_greedy_solver.run(5000)
         print('epsilon-贪婪算法的累积懊悔为：', epsilon_greedy_solver.regret)
         
-        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
-        run_name_suffix = ""
-        if args.algorithm == "all":
-            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
-        
+        # 对每个算法都生成独立的绘图/记录
         plot_results(
             [epsilon_greedy_solver], 
             ["EpsilonGreedy"],
             backend=args.backend,
-            run_name=(args.run_name + run_name_suffix if args.run_name else "EpsilonGreedy" + run_name_suffix),
+            run_name=(args.run_name if args.run_name else "EpsilonGreedy"),
             project_name=args.project_name
         )
         
@@ -102,14 +98,10 @@ def main():
         # 关键修改：为每个不同的epsilon值生成单独的run记录
         # 这样在wandb界面上可以直接对比不同epsilon值的性能
         for idx, (solver, solver_name) in enumerate(zip(epsilon_greedy_solver_list, epsilon_greedy_solver_names)):
-            run_name_suffix = ""
-            if args.algorithm == "all":
-                run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
-            
-            # 为每个epsilon值生成一个单独的run
-            epsilon_run_name = f"EpsilonGreedy-{solver_name}{run_name_suffix}"
+            # 对每个算法都生成独立的绘图/记录
+            epsilon_run_name = f"EpsilonGreedy-{solver_name}"
             if args.run_name:
-                epsilon_run_name = f"{args.run_name}-{solver_name}{run_name_suffix}"
+                epsilon_run_name = f"{args.run_name}-{solver_name}"
             
             plot_results(
                 [solver], 
@@ -144,16 +136,12 @@ def main():
         decaying_epsilon_greedy_solver.run(5000)
         print('epsilon值衰减的贪婪算法的累积懊悔为：', decaying_epsilon_greedy_solver.regret)
         
-        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
-        run_name_suffix = ""
-        if args.algorithm == "all":
-            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
-        
+        # 对每个算法都生成独立的绘图/记录
         plot_results(
             [decaying_epsilon_greedy_solver], 
             ["DecayingEpsilonGreedy"],
             backend=args.backend,
-            run_name=(args.run_name + run_name_suffix if args.run_name else "DecayingEpsilonGreedy" + run_name_suffix),
+            run_name=(args.run_name if args.run_name else "DecayingEpsilonGreedy"),
             project_name=args.project_name
         )
         
@@ -169,16 +157,12 @@ def main():
         ucb_solver.run(5000)
         print('UCB算法的累积懊悔为：', ucb_solver.regret)
         
-        # 对每个算法都生成独立的绘图/记录无论是单独运行还是在all模式下
-        run_name_suffix = ""
-        if args.algorithm == "all":
-            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
-        
+        # 对每个算法都生成独立的绘图/记录
         plot_results(
             [ucb_solver], 
             [f"UCB(coef={args.ucb_coef})"],
             backend=args.backend,
-            run_name=(args.run_name + run_name_suffix if args.run_name else "UCB" + run_name_suffix),
+            run_name=(args.run_name if args.run_name else "UCB"),
             project_name=args.project_name
         )
         
@@ -194,16 +178,12 @@ def main():
         thompson_sampling_solver.run(5000)
         print('汤普森采样算法的累积懊悔为：', thompson_sampling_solver.regret)
         
-        # 对每个算法都生成独立的绘图/记录无论是单独运行还是在all模式下
-        run_name_suffix = ""
-        if args.algorithm == "all":
-            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
-        
+        # 对每个算法都生成独立的绘图/记录
         plot_results(
             [thompson_sampling_solver], 
             ["ThompsonSampling"],
             backend=args.backend,
-            run_name=(args.run_name + run_name_suffix if args.run_name else "ThompsonSampling" + run_name_suffix),
+            run_name=(args.run_name if args.run_name else "ThompsonSampling"),
             project_name=args.project_name
         )
         
