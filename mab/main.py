@@ -154,14 +154,13 @@ def main():
             all_solvers.append(decaying_epsilon_greedy_solver)
             all_solver_names.append("DecayingEpsilonGreedy")
     
-    # 如果运行所有算法，最后再绘制一个总的比较图
-    if args.algorithm == "all":
-        print('\n所有算法已运行完成，正在绘制最终比较图...')
+    # 如果运行所有算法，只在本地后端时绘制最终比较图
+    if args.algorithm == "all" and args.backend == "local":
+        print('\n所有算法已运行完成，正在绘制本地比较图...')
         plot_results(
             all_solvers, 
             all_solver_names,
-            backend=args.backend,
-            run_name=(args.run_name or "all-algorithms-comparison"),
+            backend="local",  # 强制使用本地后端，不创建wandb run
             project_name=args.project_name
         )
 
