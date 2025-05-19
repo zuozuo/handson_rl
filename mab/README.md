@@ -141,7 +141,7 @@ pip install wandb
 wandb login
 ```
 
-当运行 `--algorithm all` 时，所有算法的对比结果会被统一上传到一个新的run中，方便整体比较。
+当运行 `--algorithm all` 时，系统会为每个算法创建一个独立的 W&B run（带有 "-individual-run" 后缀），同时最终还会创建一个汇总所有算法比较结果的 run，这样既可以单独分析每个算法的详细数据，也方便进行整体比较。
 
 ## 扩展项目
 
