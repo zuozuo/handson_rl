@@ -103,6 +103,12 @@ python main.py --algorithm all
 python main.py --algorithm all --backend wandb --project-name "mab-experiments"
 ```
 
+### 特殊用例说明
+
+#### Epsilon比较模式
+
+当运行 `--algorithm epsilon-comparison --backend wandb` 时，系统会为每个不同的epsilon值（默认为[1e-4, 0.01, 0.1, 0.25, 0.5]）创建一个独立的W&B run。这样可以在W&B界面上直观地比较不同epsilon值对性能的影响。每个run名称包含对应的epsilon值，例如：`EpsilonGreedy-epsilon=0.01`。
+
 ## 算法说明
 
 ### ε-贪婪算法 (Epsilon-Greedy)
