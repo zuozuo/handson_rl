@@ -128,12 +128,20 @@ python main.py --algorithm all --backend wandb --project-name "mab-experiments"
 - 实验参数记录
 - 团队共享和协作
 
+每次运行算法时，系统都会自动创建一个新的W&B实验 run，记录以下内容：
+
+- 实验配置参数（算法名称、bandit参数等）
+- 每一步的懊悔值随时间的变化曲线
+- 完整的数据表格，方便导出和后续分析
+
 要使用此功能，请确保已安装wandb并已登录：
 
 ```bash
 pip install wandb
 wandb login
 ```
+
+当运行 `--algorithm all` 时，所有算法的对比结果会被统一上传到一个新的run中，方便整体比较。
 
 ## 扩展项目
 
