@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import wandb
 
-def plot_results(solvers, solver_names):
-    """生成累积懊悔随时间变化的图像。输入solvers是一个列表,列表中的每个元素是一种特定的策略。
+def plot_results_to_local(solvers, solver_names):
+    """生成累积懊悔随时间变化的图像并展示在本地。输入solvers是一个列表,列表中的每个元素是一种特定的策略。
     而solver_names也是一个列表,存储每个策略的名称"""
     for idx, solver in enumerate(solvers):
         time_list = range(len(solver.regrets))
@@ -14,6 +14,25 @@ def plot_results(solvers, solver_names):
     plt.title('%d-armed bandit' % solvers[0].bandit.K)
     plt.legend()
     plt.show()
+
+
+def plot_results(solvers, solver_names, backend="local", run_name=None, project_name="mab-experiments"):
+    """生成累积懊悔随时间变化的图像。输入solvers是一个列表,列表中的每个元素是一种特定的策略。
+    而solver_names也是一个列表,存储每个策略的名称。
+    
+    参数：
+    - solvers: 求解器列表
+    - solver_names: 求解器名称列表
+    - backend: 绘图后端，"local"表示本地显示，"wandb"表示使用Weights & Biases
+    - run_name: wandb运行的名称，只在backend="wandb"时使用
+    - project_name: wandb项目名称，只在backend="wandb"时使用
+    """
+    if backend.lower() == "local":
+        return plot_results_to_local(solvers, solver_names)
+    elif backend.lower() == "wandb":
+        return plot_results_to_wandb(solvers, solver_names, run_name=run_name, project_name=project_name)
+    else:
+        raise ValueError(f"Unsupported backend: {backend}. Choose either 'local' or 'wandb'.")
 
 
 def plot_results_to_wandb(solvers, solver_names, run_name=None, project_name="mab-experiments"):
