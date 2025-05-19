@@ -61,26 +61,28 @@ def main():
     all_solvers = []
     all_solver_names = []
 
-    # 运行epsilon-贪婪算法
+    # 运行标准ε-贪婪算法
     if args.algorithm == "epsilon-greedy" or args.algorithm == "all":
         np.random.seed(1)
-        epsilon_greedy_solver = EpsilonGreedy(bandit_10_arm, epsilon=0.01)
+        epsilon = 0.01  # 设置 epsilon 值
+        epsilon_greedy_solver = EpsilonGreedy(bandit_10_arm, epsilon=epsilon)
         epsilon_greedy_solver.run(5000)
         print('epsilon-贪婪算法的累积懊悔为：', epsilon_greedy_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
+        algorithm_name = f"EpsilonGreedy(epsilon={epsilon})"
         plot_results(
             [epsilon_greedy_solver], 
-            ["EpsilonGreedy"],
+            [algorithm_name],
             backend=args.backend,
-            run_name=(args.run_name if args.run_name else "EpsilonGreedy"),
+            run_name=(args.run_name if args.run_name else algorithm_name),
             project_name=args.project_name
         )
         
         # 如果是运行所有算法，则将求解器添加到对比列表中
         if args.algorithm == "all":
             all_solvers.append(epsilon_greedy_solver)
-            all_solver_names.append("EpsilonGreedy")
+            all_solver_names.append(algorithm_name)
     
     # 运行不同epsilon值的贪婪算法进行对比
     if args.algorithm == "epsilon-comparison" or args.algorithm == "all":
