@@ -60,17 +60,21 @@ def main():
         epsilon_greedy_solver.run(5000)
         print('epsilon-贪婪算法的累积懊悔为：', epsilon_greedy_solver.regret)
         
-        # 如果不是运行所有算法，则立即绘图
-        if args.algorithm != "all":
-            plot_results(
-                [epsilon_greedy_solver], 
-                ["EpsilonGreedy"],
-                backend=args.backend,
-                run_name=args.run_name,
-                project_name=args.project_name
-            )
-        else:
-            # 否则将求解器添加到列表中
+        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
+        run_name_suffix = ""
+        if args.algorithm == "all":
+            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        
+        plot_results(
+            [epsilon_greedy_solver], 
+            ["EpsilonGreedy"],
+            backend=args.backend,
+            run_name=(args.run_name + run_name_suffix if args.run_name else "EpsilonGreedy" + run_name_suffix),
+            project_name=args.project_name
+        )
+        
+        # 如果是运行所有算法，则将求解器添加到对比列表中
+        if args.algorithm == "all":
             all_solvers.append(epsilon_greedy_solver)
             all_solver_names.append("EpsilonGreedy")
     
@@ -85,17 +89,21 @@ def main():
         for solver in epsilon_greedy_solver_list:
             solver.run(5000)
         
-        # 如果不是运行所有算法，则立即绘图
-        if args.algorithm != "all":
-            plot_results(
-                epsilon_greedy_solver_list, 
-                epsilon_greedy_solver_names,
-                backend=args.backend,
-                run_name=args.run_name,
-                project_name=args.project_name
-            )
-        else:
-            # 如果运行所有算法，我们只选择最佳的epsilon值。这里选择中间值0.1
+        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
+        run_name_suffix = ""
+        if args.algorithm == "all":
+            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        
+        plot_results(
+            epsilon_greedy_solver_list, 
+            epsilon_greedy_solver_names,
+            backend=args.backend,
+            run_name=(args.run_name + run_name_suffix if args.run_name else "EpsilonComparison" + run_name_suffix),
+            project_name=args.project_name
+        )
+        
+        # 如果运行所有算法，我们选择最佳的epsilon值添加到对比列表中
+        if args.algorithm == "all":
             best_idx = 2  # 0.1的索引
             all_solvers.append(epsilon_greedy_solver_list[best_idx])
             all_solver_names.append(epsilon_greedy_solver_names[best_idx])
@@ -107,28 +115,32 @@ def main():
         decaying_epsilon_greedy_solver.run(5000)
         print('epsilon值衰减的贪婪算法的累积懊悔为：', decaying_epsilon_greedy_solver.regret)
         
-        # 如果不是运行所有算法，则立即绘图
-        if args.algorithm != "all":
-            plot_results(
-                [decaying_epsilon_greedy_solver], 
-                ["DecayingEpsilonGreedy"],
-                backend=args.backend,
-                run_name=args.run_name,
-                project_name=args.project_name
-            )
-        else:
-            # 否则将求解器添加到列表中
+        # 对每个算法都生成独立的绘图/记录，无论是单独运行还是在all模式下
+        run_name_suffix = ""
+        if args.algorithm == "all":
+            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        
+        plot_results(
+            [decaying_epsilon_greedy_solver], 
+            ["DecayingEpsilonGreedy"],
+            backend=args.backend,
+            run_name=(args.run_name + run_name_suffix if args.run_name else "DecayingEpsilonGreedy" + run_name_suffix),
+            project_name=args.project_name
+        )
+        
+        # 如果是运行所有算法，则将求解器添加到对比列表中
+        if args.algorithm == "all":
             all_solvers.append(decaying_epsilon_greedy_solver)
             all_solver_names.append("DecayingEpsilonGreedy")
     
-    # 如果运行所有算法，最后绘制比较图
+    # 如果运行所有算法，最后再绘制一个总的比较图
     if args.algorithm == "all":
-        print('\n所有算法已运行完成，正在绘制比较图...')
+        print('\n所有算法已运行完成，正在绘制最终比较图...')
         plot_results(
             all_solvers, 
             all_solver_names,
             backend=args.backend,
-            run_name=args.run_name or "all-algorithms-comparison",
+            run_name=(args.run_name or "all-algorithms-comparison"),
             project_name=args.project_name
         )
 
