@@ -166,6 +166,17 @@ wandb login
 
 所有算法都使用相同的指标名称 `regret`，这样在使用 W&B 时，您可以在界面上轻松地选择不同的 run 来直接比较任意算法组合的性能。
 
+### 项目W&B页面
+
+你可以通过以下链接查看此项目的Weights & Biases记录，比较不同算法的regret指标：
+
+[https://wandb.ai/zuozuo/mab-experiments](https://wandb.ai/zuozuo/mab-experiments)
+
+在该页面中，你可以：
+- 查看每种算法的累积懊悔（regret）随时间的变化趋势
+- 比较不同算法的性能差异
+- 分析算法参数（如UCB的系数、epsilon值等）对性能的影响
+
 ## 扩展项目
 
 如果你想添加新的求解器算法，只需：
