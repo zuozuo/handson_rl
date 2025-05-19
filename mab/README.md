@@ -79,6 +79,9 @@ python main.py
   - `thompson-sampling`: 汤普森采样(Thompson Sampling)算法
   - `all`: 运行所有算法并进行比较
 - `--ucb-coef`: UCB算法的系数，控制不确定性比重（仅在algorithm=ucb或all时有效）
+- `--steps`: 算法运行的步数（默认为5000）
+- `--k`: 老虎机的拉杆数量（默认为10）
+- `--seed`: 随机种子（默认为1）
 - `--backend`: 选择结果可视化的后端
   - `local`: 本地显示图表（默认）
   - `wandb`: 使用Weights & Biases进行可视化和实验跟踪
