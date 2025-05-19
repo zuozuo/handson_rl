@@ -5,6 +5,8 @@ import argparse
 from bandit_env import BernoulliBandit
 from epsilon_greedy import EpsilonGreedy
 from decaying_epsilon_greedy import DecayingEpsilonGreedy
+from ucb import UCB
+from thompson_sampling import ThompsonSampling
 from utils import plot_results
 
 def parse_args():
@@ -33,8 +35,14 @@ def parse_args():
         "--algorithm",
         type=str,
         default="decaying-epsilon-greedy",
-        choices=["epsilon-greedy", "decaying-epsilon-greedy", "epsilon-comparison", "all"],
+        choices=["epsilon-greedy", "decaying-epsilon-greedy", "epsilon-comparison", "ucb", "thompson-sampling", "all"],
         help="要运行的算法，'all'表示运行所有算法"
+    )
+    parser.add_argument(
+        "--ucb-coef",
+        type=float,
+        default=1.0,
+        help="UCB算法的系数，控制不确定性比重 (仅在algorithm=ucb或all时有效)"
     )
     return parser.parse_args()
 
@@ -154,6 +162,56 @@ def main():
             all_solvers.append(decaying_epsilon_greedy_solver)
             all_solver_names.append("DecayingEpsilonGreedy")
     
+    # 运行UCB算法
+    if args.algorithm == "ucb" or args.algorithm == "all":
+        np.random.seed(1)
+        ucb_solver = UCB(bandit_10_arm, coef=args.ucb_coef)
+        ucb_solver.run(5000)
+        print('UCB算法的累积懊悔为：', ucb_solver.regret)
+        
+        # 对每个算法都生成独立的绘图/记录无论是单独运行还是在all模式下
+        run_name_suffix = ""
+        if args.algorithm == "all":
+            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        
+        plot_results(
+            [ucb_solver], 
+            [f"UCB(coef={args.ucb_coef})"],
+            backend=args.backend,
+            run_name=(args.run_name + run_name_suffix if args.run_name else "UCB" + run_name_suffix),
+            project_name=args.project_name
+        )
+        
+        # 如果是运行所有算法，则将求解器添加到对比列表中
+        if args.algorithm == "all":
+            all_solvers.append(ucb_solver)
+            all_solver_names.append(f"UCB(coef={args.ucb_coef})")
+    
+    # 运行汤普森采样算法
+    if args.algorithm == "thompson-sampling" or args.algorithm == "all":
+        np.random.seed(1)
+        thompson_sampling_solver = ThompsonSampling(bandit_10_arm)
+        thompson_sampling_solver.run(5000)
+        print('汤普森采样算法的累积懊悔为：', thompson_sampling_solver.regret)
+        
+        # 对每个算法都生成独立的绘图/记录无论是单独运行还是在all模式下
+        run_name_suffix = ""
+        if args.algorithm == "all":
+            run_name_suffix = "-individual-run"  # 添加后缀以区分单独运行和最终比较运行
+        
+        plot_results(
+            [thompson_sampling_solver], 
+            ["ThompsonSampling"],
+            backend=args.backend,
+            run_name=(args.run_name + run_name_suffix if args.run_name else "ThompsonSampling" + run_name_suffix),
+            project_name=args.project_name
+        )
+        
+        # 如果是运行所有算法，则将求解器添加到对比列表中
+        if args.algorithm == "all":
+            all_solvers.append(thompson_sampling_solver)
+            all_solver_names.append("ThompsonSampling")
+            
     # 所有算法已分别生成各自的独立记录，不再绘制汇总图
     if args.algorithm == "all":
         print('\n所有算法已运行完成。')
