@@ -134,6 +134,8 @@ python main.py --algorithm all --backend wandb --project-name "mab-experiments"
 - 每一步的懊悔值随时间的变化曲线
 - 完整的数据表格，方便导出和后续分析
 
+所有算法都使用统一的 `regret` 指标名称，这样在W&B界面上可以轻松地在同一个图表中比较不同的算法或不同的运行结果。
+
 要使用此功能，请确保已安装wandb并已登录：
 
 ```bash
@@ -141,7 +143,7 @@ pip install wandb
 wandb login
 ```
 
-当运行 `--algorithm all` 时，系统会为每个算法创建一个独立的 W&B run（带有 "-individual-run" 后缀），同时最终还会创建一个汇总所有算法比较结果的 run，这样既可以单独分析每个算法的详细数据，也方便进行整体比较。
+当运行 `--algorithm all` 时，系统会为每个算法创建一个独立的 W&B run（带有 "-individual-run" 后缀），同时最终还会创建一个汇总所有算法比较结果的 run。由于所有run都使用相同的指标名称 `regret`，您可以在W&B界面上轻松地通过选择不同的run来比较任何算法组合的性能。
 
 ## 扩展项目
 
