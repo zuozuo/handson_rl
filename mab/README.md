@@ -149,7 +149,9 @@ pip install wandb
 wandb login
 ```
 
-当运行 `--algorithm all` 时，系统会为每个算法创建一个独立的 W&B run（带有 "-individual-run" 后缀），同时最终还会创建一个汇总所有算法比较结果的 run。由于所有run都使用相同的指标名称 `regret`，您可以在W&B界面上轻松地通过选择不同的run来比较任何算法组合的性能。
+当运行 `--algorithm all --backend wandb` 时，系统会为每个算法创建一个独立的 W&B run（带有 "-individual-run" 后缀）。由于所有run都使用相同的指标名称 `regret`，您可以在W&B界面上轻松地通过选择不同的run来比较任何算法组合的性能，而不需要额外的汇总 run。
+
+当使用 `--algorithm all --backend local` 时，系统仍然会生成一个包含所有算法的本地比较图表。
 
 ## 扩展项目
 
