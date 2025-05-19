@@ -35,7 +35,11 @@
 4. **DecayingEpsilonGreedy** - 累积懊悔约 150
 5. **其他更大 epsilon 值的 EpsilonGreedy 算法** - 累积懊悔更高
 
-![算法性能比较图](https://wandb.ai/zuozuo/mab-experiments/workspace?nw=nwuserzuozuo&panelDisplayName=regret&panelSectionName=Charts)
+### Weights & Biases 实验结果截图
+
+![算法性能比较图](https://api.wandb.ai/files/zuozuo/mab-experiments/workspace_screenshot.png)
+
+*截图显示了各种算法在W&B平台上记录的累积懊悔(regret)值。可以清晰看到EpsilonGreedy(epsilon=0.0001)在实验中表现最佳，累积懊悔值最低，约为3.9；而Thompson Sampling和UCB分别排名第二和第三，DecayingEpsilonGreedy性能相对较差。*
 
 ## 特殊现象分析：为什么 EpsilonGreedy(epsilon=0.0001) 比 DecayingEpsilonGreedy 效果更好？
 
