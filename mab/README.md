@@ -2,6 +2,8 @@
 
 这个项目实现了几种经典的多臂老虎机（Multi-Armed Bandit, MAB）算法，并提供了用于比较它们性能的工具。
 
+查看[**实验分析报告**](reports.md)了解各算法性能比较和详细分析。
+
 该项目代码基于[《动手学深度强化学习》](https://hrl.boyuai.com/chapter/1/%E5%A4%9A%E8%87%82%E8%80%81%E8%99%8E%E6%9C%BA)中的实现，并进行了扫展和重构。
 
 ## 项目结构
@@ -16,6 +18,7 @@
 - `thompson_sampling.py`: 实现了汤普森采样(Thompson Sampling)算法
 - `utils.py`: 包含绘图和结果可视化的工具函数
 - `main.py`: 主程序入口，提供命令行参数解析和实验运行功能
+- `reports.md`: 实验分析报告，包含各算法的性能比较和现象分析
 
 ## 环境设置
 
@@ -170,7 +173,7 @@ wandb login
 
 你可以通过以下链接查看此项目的Weights & Biases记录，比较不同算法的regret指标：
 
-[https://wandb.ai/zuozuo/mab-experiments](https://wandb.ai/zuozuo/mab-experiments)
+[https://wandb.ai/zuozuo/mab-experiments](https://wandb.ai/zuozuo/mab-experiments/workspace?nw=nwuserzuozuo&panelDisplayName=regret&panelSectionName=Charts)
 
 在该页面中，你可以：
 - 查看每种算法的累积懊悔（regret）随时间的变化趋势
