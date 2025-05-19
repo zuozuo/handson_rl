@@ -75,33 +75,38 @@ def plot_results_to_wandb(solvers, solver_names, run_name=None, project_name="ma
     # 获取最长的regrets列表长度
     max_steps = max([len(solver.regrets) for solver in solvers])
     
-    # 创建一个字典来存储每个算法的结果曲线
-    all_steps_data = {}
-    
-    # 为每一步记录每个solver的regret值
-    for step in range(max_steps):
-        row = [step]
-        step_data = {"step": step}
-        
-        for idx, solver in enumerate(solvers):
-            # 如果solver的regrets长度小于当前步数，则使用最后一个值
-            regret_value = None
-            if step < len(solver.regrets):
-                regret_value = float(solver.regrets[step])  # 转换为原生类型
-            row.append(regret_value)
+    # 如果只有一个求解器，直接记录每一步的regret值
+    # 这样不同的run会共享same metric name，wandb还可以自动在一个图中显示不同的run
+    if len(solvers) == 1:
+        for step in range(len(solvers[0].regrets)):
+            if step < len(solvers[0].regrets):
+                regret_value = float(solvers[0].regrets[step])  # 转换为原生类型
+                wandb.log({
+                    "regret": regret_value,
+                    "step": step
+                })
+    # 如果有多个求解器在同一个run中，需要区分不同求解器的regret
+    else:
+        # 为每一步记录每个solver的regret值
+        for step in range(max_steps):
+            row = [step]
             
-            # 添加到单步数据中
-            if regret_value is not None:
-                step_data[f"regret/{solver_names[idx]}"] = regret_value
-        
-        data_table.add_data(*row)
-        
-        # 一次性记录所有算法在此步骤的regret值
-        all_steps_data[step] = step_data
-    
-    # 按照步骤顺序记录数据
-    for step, step_data in sorted(all_steps_data.items()):
-        wandb.log(step_data)
+            for idx, solver in enumerate(solvers):
+                # 如果solver的regrets长度小于当前步数，则使用最后一个值
+                regret_value = None
+                if step < len(solver.regrets):
+                    regret_value = float(solver.regrets[step])  # 转换为原生类型
+                row.append(regret_value)
+                
+                # 对于比较图，使用通用的“regret”指标，但需要添加算法名称以区分
+                if regret_value is not None:
+                    wandb.log({
+                        "regret": regret_value,
+                        "step": step,
+                        "algorithm": solver_names[idx]  # 使用算法名称标记不同的序列
+                    })
+            
+            data_table.add_data(*row)
     
     # 记录表格
     wandb.log({"regrets_table": data_table})
