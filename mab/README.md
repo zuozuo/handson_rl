@@ -12,6 +12,8 @@
 - `solver.py`: 实现了基础的 `Solver` 类，作为所有求解算法的基类
 - `epsilon_greedy.py`: 实现了基于ε-贪婪策略的求解算法
 - `decaying_epsilon_greedy.py`: 实现了ε值随时间衰减的贪婪算法
+- `ucb.py`: 实现了上置信界(Upper Confidence Bound, UCB)算法
+- `thompson_sampling.py`: 实现了汤普森采样(Thompson Sampling)算法
 - `utils.py`: 包含绘图和结果可视化的工具函数
 - `main.py`: 主程序入口，提供命令行参数解析和实验运行功能
 
@@ -70,7 +72,10 @@ python main.py
   - `epsilon-greedy`: 标准ε-贪婪算法
   - `decaying-epsilon-greedy`: ε值随时间衰减的贪婪算法（默认）
   - `epsilon-comparison`: 比较不同ε值的贪婪算法
+  - `ucb`: 上置信界(Upper Confidence Bound)算法
+  - `thompson-sampling`: 汤普森采样(Thompson Sampling)算法
   - `all`: 运行所有算法并进行比较
+- `--ucb-coef`: UCB算法的系数，控制不确定性比重（仅在algorithm=ucb或all时有效）
 - `--backend`: 选择结果可视化的后端
   - `local`: 本地显示图表（默认）
   - `wandb`: 使用Weights & Biases进行可视化和实验跟踪
@@ -118,6 +123,14 @@ python main.py --algorithm all --backend wandb --project-name "mab-experiments"
 ### 衰减ε-贪婪算法 (Decaying Epsilon-Greedy)
 
 这个算法让ε值随着时间推移而衰减，使得算法在早期更多地进行探索，而在后期更倾向于利用已知的好拉杆。
+
+### 上置信界算法 (Upper Confidence Bound, UCB)
+
+上置信界算法是一种基于不确定性的策略算法。它在选择拉杆时考虑了每个拉杆的当前期望奖励估计值和不确定性。对于尝试次数少的拉杆，其不确定性更高，因此更倾向于探索这些拉杆。UCB 算法的关键是计算每个拉杆的期望奖励上界，并选择上界最大的拉杆。
+
+### 汤普森采样算法 (Thompson Sampling)
+
+汤普森采样算法是一种基于概率分布的策略算法。它假设每个拉杆的奖励服从一个概率分布（通常是 Beta 分布），并在每一步中从每个拉杆的当前分布中进行采样，选择样本中奖励最大的拉杆。在获取新的奖励后，更新相应拉杆的奖励分布。这种方法在实践中效果很好，并且可以实现对数级别的渐近最优累积懊悔。
 
 ## 可视化选项
 
