@@ -219,8 +219,10 @@ wandb sweep sweep_config.yaml
 3. 运行 sweep agent（将输出的 SWEEP_ID 替换为初始化时返回的 ID）：
 
 ```bash
-wandb agent SWEEP_ID
+wandb agent zuozuo/$PROJECT_NAME/$SWEEP_ID
 ```
+
+其中 `zuozuo` 是您的 W&B 用户名，`$PROJECT_NAME` 是项目名称（默认为 `mab-sweep-experiments`），`$SWEEP_ID` 是初始化时返回的 ID。
 
 ### 探索的主要参数
 
