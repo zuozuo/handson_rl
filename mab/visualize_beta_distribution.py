@@ -6,51 +6,37 @@ import argparse
 
 def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
     """
-    Generates a Beta distribution plot and either logs it to W&B as an image
-    or displays it locally.
+    生成 Beta 分布数据并将其记录到 W&B 或在本地显示。
+    
+    当 backend 为 'wandb' 时，以交互式格式记录 Beta 分布数据，
+    而不是静态图像。这使您可以在 W&B 界面中直接探索这些分布。
+    
+    当 backend 为 'local' 时，使用 Matplotlib 在本地显示分布图。
 
     Parameters:
-    alpha_beta_pairs (list of tuples): A list of (alpha, beta) parameter pairs.
-    x_values (numpy.ndarray): X values for PDF calculation (typically [0, 1]).
-    project_name (str): W&B project name (if backend='wandb').
-    backend (str): 'wandb' or 'local'.
+    alpha_beta_pairs (list of tuples): 一个包含 (alpha, beta) 参数对的列表。
+    x_values (numpy.ndarray): 用于计算 PDF 的 x 值数组 (通常在 [0, 1] 区间)。
+    project_name (str): W&B 项目名称 (如果 backend='wandb')。
+    backend (str): 'wandb' 或 'local'。
     """
-
-    # --- 1. Create the Matplotlib figure ---
-    # This figure will be used by both 'wandb' and 'local' backends
-    fig, ax = plt.subplots(figsize=(12, 8))
-    for a, b in alpha_beta_pairs:
-        y_values = beta.pdf(x_values, a, b)
-        ax.plot(x_values, y_values, label=f'Beta({a}, {b})')
-
-    ax.set_title('Beta Distribution for Different α and β Parameters', fontsize=16)
-    ax.set_xlabel('x (Value of the random variable)', fontsize=12)
-    ax.set_ylabel('Probability Density Function (PDF)', fontsize=12)
-    ax.legend(fontsize=10)
-    ax.grid(True, linestyle='--', alpha=0.7)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(bottom=0)
-    # --- Figure creation complete ---
-
-    current_run = None # Initialize current_run to None
+    
     if backend == "wandb":
-        # Construct a descriptive run name
+        # 构造描述性运行名称
         run_name_parts = [f'a{a}b{b}' for a,b in alpha_beta_pairs[:2]]
-        run_name = f"beta_plot_{'_'.join(run_name_parts)}" # Descriptive name for plot logging
+        run_name = f"beta_interactive_{'_'.join(run_name_parts)}"
         if len(alpha_beta_pairs) > 2:
             run_name += "_etc"
         
-        # Initialize W&B run
+        # 初始化 W&B 运行
         current_run = wandb.init(project=project_name, name=run_name, job_type="visualization")
         
         if current_run is None:
-            print("Error: Failed to initialize W&B run.")
-            plt.close(fig) # Close the figure if W&B init fails
+            print("错误: 无法初始化 W&B 运行。")
             return
 
         try:
-            print(f"Logging to W&B project: {project_name}, run: {current_run.name}")
-            # Log configuration
+            print(f"记录到 W&B 项目: {project_name}, 运行: {current_run.name}")
+            # 记录配置
             current_run.config.update({
                 "alpha_beta_pairs": alpha_beta_pairs,
                 "backend": backend,
@@ -58,47 +44,102 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
                 "num_x_points": len(x_values)
             })
 
-            # --- Log the Matplotlib figure as an image to W&B ---
-            current_run.log({"Beta Distributions Plot": wandb.Image(fig)})
-            print("Plot image logged to W&B.")
+            # 创建数据表来存储所有分布的数据点
+            data = []
+            
+            # 为每个分布生成数据点并添加到数据表
+            for a, b in alpha_beta_pairs:
+                y_values = beta.pdf(x_values, a, b)
+                
+                # 直接记录这个 beta 分布的线图数据
+                # 创建带标签的数据字典
+                data_dict = {
+                    "x": x_values,
+                    f"Beta({a}, {b})": y_values
+                }
+                
+                # 对于第一个分布，我们创建一个表格
+                if len(data) == 0:
+                    data = wandb.Table(data=[[x, y] for x, y in zip(x_values, y_values)],
+                                      columns=["x", f"Beta({a}, {b})"])
+                else:
+                    # 对于后续分布，我们向表格添加新列
+                    data.add_column(f"Beta({a}, {b})", [y for y in y_values])
+            
+            # 使用 wandb.plot 创建交互式线图
+            beta_plot = wandb.plot.line(
+                data, 
+                "x", 
+                [f"Beta({a}, {b})" for a, b in alpha_beta_pairs],
+                title="Beta Distribution for Different α and β Parameters",
+                xname="x (Value of the random variable)"
+            )
+            
+            # 记录交互式线图
+            current_run.log({"Beta Distributions": beta_plot})
+            
+            # 为每个 (a,b) 对记录摘要统计信息
+            for a, b in alpha_beta_pairs:
+                mean_val = beta.mean(a, b)
+                var_val = beta.var(a, b)
+                
+                mode_val = np.nan
+                if a > 1 and b > 1:
+                    mode_val = (a - 1) / (a + b - 2)
+                
+                current_run.log({
+                    f"Beta({a},{b})/mean": mean_val,
+                    f"Beta({a},{b})/mode": mode_val if not np.isnan(mode_val) else None,
+                    f"Beta({a},{b})/variance": var_val
+                })
+            
+            print("Beta 分布数据以交互式格式记录到 W&B。")
         
         except Exception as e:
-            print(f"An error occurred during W&B logging: {e}")
+            print(f"W&B 记录过程中发生错误: {e}")
 
         finally:
-            # Ensure wandb.finish is called to close the run
-            if current_run: # Check if current_run was successfully initialized
+            # 确保 wandb.finish 被调用以关闭运行
+            if current_run:
                 current_run.finish()
-                print("W&B run finished.")
-            # Close the figure after logging or if an error occurred,
-            # and ensure it's not shown via plt.show() for wandb backend
-            plt.close(fig) 
+                print("W&B 运行已完成。")
 
     elif backend == "local":
-        plt.show() # Display plot locally
-        print("Plot displayed locally. No W&B logging.")
-        plt.close(fig) # Explicitly close the figure after showing
+        # 本地绘图逻辑保持不变
+        fig, ax = plt.subplots(figsize=(12, 8))
+        for a, b in alpha_beta_pairs:
+            y_values = beta.pdf(x_values, a, b)
+            ax.plot(x_values, y_values, label=f'Beta({a}, {b})')
+
+        ax.set_title('Beta Distribution for Different α and β Parameters', fontsize=16)
+        ax.set_xlabel('x (Value of the random variable)', fontsize=12)
+        ax.set_ylabel('Probability Density Function (PDF)', fontsize=12)
+        ax.legend(fontsize=10)
+        ax.grid(True, linestyle='--', alpha=0.7)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(bottom=0)
+        
+        plt.show() # 在本地显示图像
+        print("已在本地显示图像。没有 W&B 记录。")
+        plt.close(fig) # 显示后显式关闭图像
     else:
-        print(f"Error: Unknown backend '{backend}'. Please choose 'wandb' or 'local'.")
-        # Ensure figure is closed if it was created but backend is invalid
-        if fig:
-             plt.close(fig)
+        print(f"错误: 未知后端 '{backend}'。请选择 'wandb' 或 'local'。")
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Visualize Beta distributions: log plot image to W&B or display plot locally.")
+    parser = argparse.ArgumentParser(description="可视化 Beta 分布: 将交互式图表记录到 W&B 或在本地显示。")
     parser.add_argument(
         "--project_name",
         type=str,
         default="handson_rl-mab-visualizations",
-        help="Name of the Weights & Biases project to log to (used if backend is 'wandb')."
+        help="要记录到的 Weights & Biases 项目名称 (当 backend 为 'wandb' 时使用)。"
     )
     parser.add_argument(
         "--backend",
         type=str,
         choices=["wandb", "local"], 
         default="local",            
-        help="Output backend: 'wandb' to log plot image to W&B, 'local' to display plot locally only."
+        help="输出后端: 'wandb' 将交互式图表记录到 W&B，'local' 仅在本地显示图像。"
     )
     args = parser.parse_args()
 
@@ -108,8 +149,7 @@ if __name__ == '__main__':
         (1, 1), (2, 2), (5, 5), (2, 5), (5, 2),       
         (0.5, 0.5), (0.8, 0.8),                       
         (1, 3), (3, 1),                               
-        (10, 30), (30, 10),                           
-        (1.5, 1.5), (1.5, 3.5)                        
+        (10, 30), (30, 10)                              
     ]
 
     plot_beta_distributions(parameter_pairs, x, args.project_name, args.backend)
