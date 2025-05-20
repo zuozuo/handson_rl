@@ -197,6 +197,53 @@ wandb login
 3. 实现`run_one_step`方法
 4. 在`main.py`中导入并添加你的新算法
 
+## 使用 Weights & Biases Sweeps 进行超参数优化
+
+项目包含了一个预配置的 W&B sweep 文件，可用于探索不同算法参数和问题设置的组合，介绅各个参数设置对算法性能的影响。
+
+### 如何运行 Sweep
+
+1. 确保您已经安装并登录了 W&B：
+
+```bash
+pip install wandb
+wandb login
+```
+
+2. 初始化 sweep：
+
+```bash
+wandb sweep sweep_config.yaml
+```
+
+3. 运行 sweep agent（将输出的 SWEEP_ID 替换为初始化时返回的 ID）：
+
+```bash
+wandb agent SWEEP_ID
+```
+
+### 探索的主要参数
+
+Sweep 配置会探索以下参数：
+
+1. **算法类型**：测试各种算法（epsilon-greedy、decaying-epsilon-greedy、UCB、Thompson Sampling）
+2. **问题大小**：不同的拉杆数量 K（5、10、20、50）
+3. **运行时长**：不同的步数（1000、5000、10000、20000）
+4. **算法特定参数**：
+   - epsilon-greedy 的 epsilon 值（0.00001 到 0.5）
+   - UCB 的系数（0.1 到 2.0）
+5. **随机种子**：多个随机种子确保结果的可靠性
+
+### 在 W&B 上查看结果
+
+Sweep 完成后，您可以在 W&B 界面上查看结果。平台提供了丰富的可视化工具来分析：
+
+- 平行坐标图（查看参数之间的相关性）
+- 重要性分析（确定哪些参数对算法性能影响最大）
+- 最佳参数组合（获取表现最佳的配置）
+
+这些分析可以帮助验证报告中的发现并探索新的见解。
+
 ## 参考资料
 
 - [动手学深度强化学习 - 多臂老虎机](https://hrl.boyuai.com/chapter/1/%E5%A4%9A%E8%87%82%E8%80%81%E8%99%8E%E6%9C%BA)
