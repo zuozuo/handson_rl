@@ -1,0 +1,62 @@
+program: main.py
+method: bayes
+metric:
+  name: regret
+  goal: minimize
+parameters:
+  algorithm:
+    values: ["epsilon-greedy", "decaying-epsilon-greedy", "ucb", "thompson-sampling"]
+  
+  # 探索不同的拉杆数量，测试不同问题难度
+  k:
+    values: [5, 10, 20, 50]
+  
+  # 探索不同的步数，测试长期和短期性能
+  steps:
+    values: [1000, 5000, 10000, 20000]
+  
+  # 使用多个随机种子，确保结果的稳定性
+  seed:
+    distribution: int_uniform
+    min: 1
+    max: 10
+  
+  # 对于epsilon-greedy，探索不同的epsilon值
+  epsilon:
+    distribution: log_uniform_values
+    min: 0.00001
+    max: 0.5
+  
+  # 对于UCB，探索不同的系数值
+  ucb-coef:
+    distribution: uniform
+    min: 0.1
+    max: 2.0
+  
+  # 在所有实验中使用wandb后端
+  backend:
+    value: "wandb"
+  
+  # 项目名称
+  project-name:
+    value: "mab-sweep-experiments"
+
+# 条件参数：只在特定算法下应用特定参数
+# 这里使用wandb的条件语法定义条件参数
+conditional_parameters:
+  epsilon:
+    algorithm: "epsilon-greedy"
+  
+  ucb-coef:
+    algorithm: "ucb"
+
+# 命令行模板，根据参数生成命令
+command:
+  - ${program}
+  - --algorithm=${algorithm}
+  - --k=${k}
+  - --steps=${steps}
+  - --seed=${seed}
+  - --backend=${backend}
+  - --project-name=${project-name}
+  - ${args_no_hyphens}
