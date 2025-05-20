@@ -44,24 +44,20 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
                 "num_x_points": len(x_values)
             })
 
-            # 创建数据表来存储所有分布的数据点
-            data = []
+            # 创建表格来存储所有分布的数据点
+            data = None
+            table_created = False  # 使用布尔型标志跟踪表格是否已创建
             
             # 为每个分布生成数据点并添加到数据表
             for a, b in alpha_beta_pairs:
                 y_values = beta.pdf(x_values, a, b)
                 
-                # 直接记录这个 beta 分布的线图数据
-                # 创建带标签的数据字典
-                data_dict = {
-                    "x": x_values,
-                    f"Beta({a}, {b})": y_values
-                }
-                
                 # 对于第一个分布，我们创建一个表格
-                if len(data) == 0:
+                if not table_created:
+                    # 创建新表格并设置标志为 True
                     data = wandb.Table(data=[[x, y] for x, y in zip(x_values, y_values)],
                                       columns=["x", f"Beta({a}, {b})"])
+                    table_created = True
                 else:
                     # 对于后续分布，我们向表格添加新列
                     data.add_column(f"Beta({a}, {b})", [y for y in y_values])
