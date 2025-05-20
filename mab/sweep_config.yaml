@@ -1,4 +1,4 @@
-program: main.py
+program: /Users/yonghuizuo/workspace/projects/handson_rl/mab/main.py
 method: bayes
 metric:
   name: regret
@@ -52,6 +52,7 @@ conditional_parameters:
 
 # 命令行模板，根据参数生成命令
 command:
+  - python
   - ${program}
   - --algorithm=${algorithm}
   - --k=${k}
@@ -60,3 +61,6 @@ command:
   - --backend=${backend}
   - --project-name=${project-name}
   - ${args_no_hyphens}
+
+# 指定工作目录
+working_directory: /Users/yonghuizuo/workspace/projects/handson_rl/mab
