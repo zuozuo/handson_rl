@@ -1,5 +1,5 @@
 program: /Users/yonghuizuo/workspace/projects/handson_rl/mab/main.py
-method: bayes
+method: grid  # 使用网格搜索替代贝叶斯优化，更快地覆盖关键参数组合
 metric:
   name: regret
   goal: minimize
@@ -9,29 +9,23 @@ parameters:
   
   # 探索不同的拉杆数量，测试不同问题难度
   k:
-    values: [5, 10, 20, 50]
+    values: [10, 20]  # 减少拉杆数量选项
   
   # 探索不同的步数，测试长期和短期性能
   steps:
-    values: [1000, 5000, 10000, 20000]
+    values: [2000, 5000]  # 减少步数，加快执行
   
   # 使用多个随机种子，确保结果的稳定性
   seed:
-    distribution: int_uniform
-    min: 1
-    max: 10
+    values: [1, 5]  # 减少种子数量
   
-  # 对于epsilon-greedy，探索不同的epsilon值
+  # 对于epsilon-greedy，探索关键的epsilon值
   epsilon:
-    distribution: log_uniform_values
-    min: 0.00001
-    max: 0.5
+    values: [0.0001, 0.01, 0.1]  # 只测试几个关键值
   
   # 对于UCB，探索不同的系数值
   ucb-coef:
-    distribution: uniform
-    min: 0.1
-    max: 2.0
+    values: [0.5, 1.0, 1.5]  # 只测试几个关键值
   
   # 在所有实验中使用wandb后端
   backend:
