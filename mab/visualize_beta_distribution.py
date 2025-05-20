@@ -8,8 +8,8 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
     """
     生成 Beta 分布数据并将其记录到 W&B 或在本地显示。
     
-    当 backend 为 'wandb' 时，以交互式格式记录 Beta 分布数据，
-    而不是静态图像。这使您可以在 W&B 界面中直接探索这些分布。
+    当 backend 为 'wandb' 时，将 Beta 分布的 PDF 值作为指标直接记录到 W&B，
+    这样您可以在 W&B 界面上直接看到所有分布的可视化曲线图。
     
     当 backend 为 'local' 时，使用 Matplotlib 在本地显示分布图。
 
@@ -23,7 +23,7 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
     if backend == "wandb":
         # 构造描述性运行名称
         run_name_parts = [f'a{a}b{b}' for a,b in alpha_beta_pairs[:2]]
-        run_name = f"beta_interactive_{'_'.join(run_name_parts)}"
+        run_name = f"beta_direct_{'_'.join(run_name_parts)}"
         if len(alpha_beta_pairs) > 2:
             run_name += "_etc"
         
@@ -36,68 +36,66 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
 
         try:
             print(f"记录到 W&B 项目: {project_name}, 运行: {current_run.name}")
+            
             # 记录配置
             current_run.config.update({
                 "alpha_beta_pairs": alpha_beta_pairs,
                 "backend": backend,
                 "project_name_used": project_name,
-                "num_x_points": len(x_values)
+                "num_x_points": len(x_values),
+                "x_range": [float(min(x_values)), float(max(x_values))]
             })
-
-            # 创建表格来存储所有分布的数据点
-            data = None
-            table_created = False  # 使用布尔型标志跟踪表格是否已创建
             
-            # 为每个分布生成数据点并添加到数据表
-            for a, b in alpha_beta_pairs:
-                y_values = beta.pdf(x_values, a, b)
-                
-                # 对于第一个分布，我们创建一个表格
-                if not table_created:
-                    # 创建新表格并设置标志为 True
-                    data = wandb.Table(data=[[x, y] for x, y in zip(x_values, y_values)],
-                                      columns=["x", f"Beta({a}, {b})"])
-                    table_created = True
-                else:
-                    # 对于后续分布，我们向表格添加新列
-                    data.add_column(f"Beta({a}, {b})", [y for y in y_values])
-            
-            # 使用 wandb.plot 创建交互式线图
-            beta_plot = wandb.plot.line(
-                data, 
-                "x", 
-                [f"Beta({a}, {b})" for a, b in alpha_beta_pairs],
-                title="Beta Distribution for Different α and β Parameters"
-            )
-            
-            # 记录交互式线图
-            current_run.log({"Beta Distributions": beta_plot})
-            
-            # 为每个 (a,b) 对记录摘要统计信息
+            # 计算并记录每个参数对的摘要统计信息
+            summary_data = {}
             for a, b in alpha_beta_pairs:
                 mean_val = beta.mean(a, b)
                 var_val = beta.var(a, b)
                 
                 mode_val = np.nan
-                if a > 1 and b > 1:
+                if a > 1 and b > 1:  # 只有当 a > 1 且 b > 1 时，众数才有定义
                     mode_val = (a - 1) / (a + b - 2)
                 
-                current_run.log({
-                    f"Beta({a},{b})/mean": mean_val,
-                    f"Beta({a},{b})/mode": mode_val if not np.isnan(mode_val) else None,
-                    f"Beta({a},{b})/variance": var_val
-                })
+                summary_data[f"Beta({a},{b})/mean"] = mean_val
+                summary_data[f"Beta({a},{b})/variance"] = var_val
+                if not np.isnan(mode_val):
+                    summary_data[f"Beta({a},{b})/mode"] = mode_val
             
-            print("Beta 分布数据以交互式格式记录到 W&B。")
+            # 一次性记录所有摘要统计信息
+            current_run.log(summary_data)
+            
+            # 对每个 x 值，我们将创建一个新的数据点
+            # 这里我们选择一个较低的采样频率，以保持数据量合理
+            # 这里选择50个点，足够绘制平滑的曲线而不会产生过多数据点
+            sampled_indices = np.linspace(0, len(x_values)-1, 50, dtype=int)
+            sampled_x = x_values[sampled_indices]
+            
+            # 为每个 x 值记录一个数据点，包含不同分布的 PDF 值
+            for step, x in enumerate(sampled_x):
+                data_point = {"x": float(x)}  # 记录 x 值
+                
+                # 计算并记录每个分布在当前 x 值的 PDF 值
+                for a, b in alpha_beta_pairs:
+                    pdf_value = float(beta.pdf(x, a, b))
+                    data_point[f"Beta({a},{b})_pdf"] = pdf_value
+                
+                # 使用当前步骤作为 x 轴的坐标
+                current_run.log(data_point, step=step)
+                
+            print("Beta 分布数据直接记录到 W&B，可在 W&B 界面上查看。")
+            print("提示: 在 W&B 界面上，您可以构建自定义图表，选择 '导入指标' 并选择包含 '_pdf' 后缀的指标。")
         
         except Exception as e:
             print(f"W&B 记录过程中发生错误: {e}")
+            import traceback
+            traceback.print_exc()
 
         finally:
             # 确保 wandb.finish 被调用以关闭运行
             if current_run:
                 current_run.finish()
                 print("W&B 运行已完成。")
+                print(f"W&B 运行 URL: {current_run.url}")
 
     elif backend == "local":
         # 本地绘图逻辑保持不变
@@ -122,7 +120,7 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="可视化 Beta 分布: 将交互式图表记录到 W&B 或在本地显示。")
+    parser = argparse.ArgumentParser(description="可视化 Beta 分布: 将分布数据记录到 W&B 或在本地显示。")
     parser.add_argument(
         "--project_name",
         type=str,
@@ -134,7 +132,7 @@ if __name__ == '__main__':
         type=str,
         choices=["wandb", "local"], 
         default="local",            
-        help="输出后端: 'wandb' 将交互式图表记录到 W&B，'local' 仅在本地显示图像。"
+        help="输出后端: 'wandb' 将分布数据直接记录到 W&B，'local' 仅在本地显示图像。"
     )
     args = parser.parse_args()
 
