@@ -256,8 +256,61 @@ Sweep 完成后，您可以在 W&B 界面上查看结果。平台提供了丰富
 
 这些分析可以帮助验证报告中的发现并探索新的见解。
 
+## Beta 分布可视化工具
+
+项目包含一个专门用于可视化 Beta 分布的工具脚本 `visualize_beta_distribution.py`。这对理解 Thompson Sampling 算法中使用的 Beta 分布非常有帮助。
+
+### 为什么需要理解 Beta 分布？
+
+Beta 分布在 Thompson Sampling 算法中扮演着重要角色，用于表示每个拉杆的奖励概率分布。了解不同 α 和 β 参数如何影响分布形状，有助于更深入地理解算法的工作原理。
+
+### 使用方法
+
+该工具支持两种可视化模式：本地显示或在 Weights & Biases 中创建交互式图表。
+
+#### 本地显示模式
+
+在本地显示 Beta 分布图（默认行为）：
+
+```bash
+python visualize_beta_distribution.py
+```
+
+或者明确指定使用本地模式：
+
+```bash
+python visualize_beta_distribution.py --backend local
+```
+
+#### Weights & Biandes 交互式图表模式
+
+将 Beta 分布作为交互式图表记录到 W&B（使用默认项目名）：
+
+```bash
+python visualize_beta_distribution.py --backend wandb
+```
+
+自定义 W&B 项目名称：
+
+```bash
+python visualize_beta_distribution.py --backend wandb --project_name "your-custom-project"
+```
+
+### W&B 交互式图表的优势
+
+当选择 `--backend wandb` 时，脚本会在 W&B 平台上创建可交互的线图，而不是上传静态图像。这为您提供以下优势：
+
+- **交互式探索**：在 W&B 界面中直接放大、缩小和平移图表
+- **选择性显示**：可以选择显示或隐藏特定的 Beta 分布
+- **数据导出**：轻松导出原始数据进行进一步分析
+- **精确值查看**：悬停在曲线上可查看确切的数据点值
+- **团队共享**：轻松与团队成员分享结果
+
+此外，脚本还会记录每个 Beta 分布的摘要统计信息（均值、众数、方差），方便进行定量分析。
+
 ## 参考资料
 
 - [动手学深度强化学习 - 多臂老虎机](https://hrl.boyuai.com/chapter/1/%E5%A4%9A%E8%87%82%E8%80%81%E8%99%8E%E6%9C%BA)
 - Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction. MIT press.
 - Multi-Armed Bandit Problem: https://en.wikipedia.org/wiki/Multi-armed_bandit
+- Beta Distribution: https://en.wikipedia.org/wiki/Beta_distribution
