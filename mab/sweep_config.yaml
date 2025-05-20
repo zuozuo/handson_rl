@@ -48,13 +48,12 @@ conditional_parameters:
 command:
   - python
   - ${program}
-  - --algorithm=${algorithm}
-  - --k=${k}
-  - --steps=${steps}
-  - --seed=${seed}
-  - --backend=${backend}
-  - --project-name=${project-name}
-  - ${args_no_hyphens}
+  - "--algorithm=$(algorithm)"
+  - "--k=$(k)"
+  - "--steps=$(steps)"
+  - "--seed=$(seed)"
+  - "--backend=$(backend)"
+  - "--project-name=$(project-name)"
 
 # 指定工作目录
 working_directory: /Users/yonghuizuo/workspace/projects/handson_rl/mab
