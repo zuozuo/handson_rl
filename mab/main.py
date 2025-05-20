@@ -92,7 +92,10 @@ def main():
             [algorithm_name],
             backend=args.backend,
             run_name=(args.run_name if args.run_name else algorithm_name),
-            project_name=args.project_name
+            project_name=args.project_name,
+            steps=args.steps,
+            K=args.k,
+            seed=args.seed
         )
         
         # 如果是运行所有算法，则将求解器添加到对比列表中
@@ -126,7 +129,10 @@ def main():
                 [solver_name],
                 backend=args.backend,
                 run_name=epsilon_run_name,
-                project_name=args.project_name
+                project_name=args.project_name,
+                steps=args.steps,
+                K=args.k,
+                seed=args.seed
             )
             
             print(f'完成运行 {solver_name} 的累积懊悔为：{solver.regret}')
@@ -160,7 +166,10 @@ def main():
             ["DecayingEpsilonGreedy"],
             backend=args.backend,
             run_name=(args.run_name if args.run_name else "DecayingEpsilonGreedy"),
-            project_name=args.project_name
+            project_name=args.project_name,
+            steps=args.steps,
+            K=args.k,
+            seed=args.seed
         )
         
         # 如果是运行所有算法，则将求解器添加到对比列表中
@@ -181,7 +190,10 @@ def main():
             [f"UCB(coef={args.ucb_coef})"],
             backend=args.backend,
             run_name=(args.run_name if args.run_name else "UCB"),
-            project_name=args.project_name
+            project_name=args.project_name,
+            steps=args.steps,
+            K=args.k,
+            seed=args.seed
         )
         
         # 如果是运行所有算法，则将求解器添加到对比列表中
@@ -202,7 +214,10 @@ def main():
             ["ThompsonSampling"],
             backend=args.backend,
             run_name=(args.run_name if args.run_name else "ThompsonSampling"),
-            project_name=args.project_name
+            project_name=args.project_name,
+            steps=args.steps,
+            K=args.k,
+            seed=args.seed
         )
         
         # 如果是运行所有算法，则将求解器添加到对比列表中

@@ -16,7 +16,7 @@ def plot_results_to_local(solvers, solver_names):
     plt.show()
 
 
-def plot_results(solvers, solver_names, backend="local", run_name=None, project_name="mab-experiments"):
+def plot_results(solvers, solver_names, backend="local", run_name=None, project_name="mab-experiments", steps=None, K=None, seed=None):
     """生成累积懊悔随时间变化的图像。输入solvers是一个列表,列表中的每个元素是一种特定的策略。
     而solver_names也是一个列表,存储每个策略的名称。
     
@@ -30,12 +30,12 @@ def plot_results(solvers, solver_names, backend="local", run_name=None, project_
     if backend.lower() == "local":
         return plot_results_to_local(solvers, solver_names)
     elif backend.lower() == "wandb":
-        return plot_results_to_wandb(solvers, solver_names, run_name=run_name, project_name=project_name)
+        plot_results_to_wandb(solvers, solver_names, run_name=run_name, project_name=project_name, steps=steps, K=K, seed=seed)
     else:
         raise ValueError(f"Unsupported backend: {backend}. Choose either 'local' or 'wandb'.")
 
 
-def plot_results_to_wandb(solvers, solver_names, run_name=None, project_name="mab-experiments"):
+def plot_results_to_wandb(solvers, solver_names, run_name=None, project_name="mab-experiments", steps=None, K=None, seed=None):
     """将累积懊悔随时间变化的结果记录到wandb。输入solvers是一个列表,列表中的每个元素是一种特定的策略。
     而solver_names也是一个列表,存储每个策略的名称。
     
@@ -59,9 +59,11 @@ def plot_results_to_wandb(solvers, solver_names, run_name=None, project_name="ma
     config = {
         "algorithm_names": solver_names,
         "num_solvers": len(solvers),
-        "bandit_arms": solvers[0].bandit.K,
+        "bandit_arms": K if K is not None else solvers[0].bandit.K,
         "bandit_best_idx": solvers[0].bandit.best_idx,
         "bandit_best_prob": float(solvers[0].bandit.best_prob),  # 转换为原生类型避免numpy值序列化问题
+        "steps": steps if steps is not None else len(solvers[0].regrets),
+        "seed": seed if seed is not None else 1
     }
     
     # 记录实验配置
