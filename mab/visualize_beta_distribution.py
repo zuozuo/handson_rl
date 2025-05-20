@@ -67,8 +67,7 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
                 data, 
                 "x", 
                 [f"Beta({a}, {b})" for a, b in alpha_beta_pairs],
-                title="Beta Distribution for Different α and β Parameters",
-                xname="x (Value of the random variable)"
+                title="Beta Distribution for Different α and β Parameters"
             )
             
             # 记录交互式线图
