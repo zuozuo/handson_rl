@@ -199,15 +199,14 @@ wandb login
 
 ## 使用 Weights & Biases Sweeps 进行超参数优化
 
-项目包含了一个预配置的 W&B sweep 文件，可用于探索不同算法参数和问题设置的组合，介绅各个参数设置对算法性能的影响。
+Weights & Biases Sweeps 是一种超参数优化工具，可以帮助你系统地探索不同的参数组合，找到最佳的算法配置。
 
-### 如何运行 Sweep
+### 执行 Sweep 实验
 
-1. 确保您已经安装并登录了 W&B：
+1. 确保已安装 Weights & Biases：
 
 ```bash
 pip install wandb
-wandb login
 ```
 
 2. 初始化 sweep：
@@ -223,6 +222,17 @@ wandb agent zuozuo/$PROJECT_NAME/$SWEEP_ID
 ```
 
 其中 `zuozuo` 是您的 W&B 用户名，`$PROJECT_NAME` 是项目名称（默认为 `mab-sweep-experiments`），`$SWEEP_ID` 是初始化时返回的 ID。
+
+4. 要加快执行速度，可以同时运行多个 agent：
+
+```bash
+# 在不同的终端窗口中运行多个相同的命令
+wandb agent zuozuo/$PROJECT_NAME/$SWEEP_ID
+wandb agent zuozuo/$PROJECT_NAME/$SWEEP_ID
+# 你可以根据计算机性能运行多个并行 agent
+```
+
+5. sweep_config.yaml 文件已经经过优化，采用网格搜索方法探索关键参数组合，大大减少了执行时间。
 
 ### 探索的主要参数
 
