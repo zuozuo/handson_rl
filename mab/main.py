@@ -62,6 +62,12 @@ def parse_args():
         default=1,
         help="随机种子"
     )
+    parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.01,
+        help="Epsilon value for epsilon-greedy algorithms (used when algorithm is epsilon-greedy)"
+    )
     return parser.parse_args()
 
 
@@ -80,13 +86,14 @@ def main():
     # 运行标准ε-贪婪算法
     if args.algorithm == "epsilon-greedy" or args.algorithm == "all":
         np.random.seed(args.seed)
-        epsilon = 0.01  # 设置 epsilon 值
-        epsilon_greedy_solver = EpsilonGreedy(bandit_10_arm, epsilon=epsilon)
+        # 使用命令行传入的epsilon值，如果 sweep 中定义了的话
+        epsilon_to_use = args.epsilon 
+        epsilon_greedy_solver = EpsilonGreedy(bandit_10_arm, epsilon=epsilon_to_use)
         epsilon_greedy_solver.run(args.steps)
         print('epsilon-贪婪算法的累积懊悔为：', epsilon_greedy_solver.regret)
         
         # 对每个算法都生成独立的绘图/记录
-        algorithm_name = f"EpsilonGreedy(epsilon={epsilon})"
+        algorithm_name = f"EpsilonGreedy(epsilon={epsilon_to_use})"
         plot_results(
             [epsilon_greedy_solver], 
             [algorithm_name],
