@@ -60,8 +60,6 @@ command:
   - ${backend}
   - --project-name
   - ${project-name}
-  - --epsilon
-  - ${epsilon}
   - --ucb-coef
   - ${ucb-coef}
 
