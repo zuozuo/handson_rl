@@ -8,10 +8,10 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
     """
     生成 Beta 分布数据并将其记录到 W&B 或在本地显示。
     
-    当 backend 为 'wandb' 时，将 Beta 分布的 PDF 值作为指标直接记录到 W&B，
-    这样您可以在 W&B 界面上直接看到所有分布的可视化曲线图。
+    当 backend 为 'wandb' 时，为每个 (alpha, beta) 参数对创建一个独立的 W&B 运行，
+    每个运行记录一条完整的 Beta 分布曲线。
     
-    当 backend 为 'local' 时，使用 Matplotlib 在本地显示分布图。
+    当 backend 为 'local' 时，使用 Matplotlib 在本地显示所有分布图。
 
     Parameters:
     alpha_beta_pairs (list of tuples): 一个包含 (alpha, beta) 参数对的列表。
@@ -21,34 +21,31 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
     """
     
     if backend == "wandb":
-        # 构造描述性运行名称
-        run_name_parts = [f'a{a}b{b}' for a,b in alpha_beta_pairs[:2]]
-        run_name = f"beta_direct_{'_'.join(run_name_parts)}"
-        if len(alpha_beta_pairs) > 2:
-            run_name += "_etc"
-        
-        # 初始化 W&B 运行
-        current_run = wandb.init(project=project_name, name=run_name, job_type="visualization")
-        
-        if current_run is None:
-            print("错误: 无法初始化 W&B 运行。")
-            return
+        # 为每个参数对创建一个独立的运行
+        for a, b in alpha_beta_pairs:
+            run_name = f"beta_a{a}_b{b}"
+            
+            # 初始化 W&B 运行
+            current_run = wandb.init(project=project_name, name=run_name, job_type="visualization")
+            
+            if current_run is None:
+                print(f"错误: 无法为 Beta({a},{b}) 初始化 W&B 运行。")
+                continue
 
-        try:
-            print(f"记录到 W&B 项目: {project_name}, 运行: {current_run.name}")
-            
-            # 记录配置
-            current_run.config.update({
-                "alpha_beta_pairs": alpha_beta_pairs,
-                "backend": backend,
-                "project_name_used": project_name,
-                "num_x_points": len(x_values),
-                "x_range": [float(min(x_values)), float(max(x_values))]
-            })
-            
-            # 计算并记录每个参数对的摘要统计信息
-            summary_data = {}
-            for a, b in alpha_beta_pairs:
+            try:
+                print(f"记录到 W&B 项目: {project_name}, 运行: {current_run.name}")
+                
+                # 记录配置
+                current_run.config.update({
+                    "alpha": a,
+                    "beta": b,
+                    "backend": backend,
+                    "project_name_used": project_name,
+                    "num_x_points": len(x_values),
+                    "x_range": [float(min(x_values)), float(max(x_values))]
+                })
+                
+                # 计算并记录摘要统计信息
                 mean_val = beta.mean(a, b)
                 var_val = beta.var(a, b)
                 
@@ -56,46 +53,37 @@ def plot_beta_distributions(alpha_beta_pairs, x_values, project_name, backend):
                 if a > 1 and b > 1:  # 只有当 a > 1 且 b > 1 时，众数才有定义
                     mode_val = (a - 1) / (a + b - 2)
                 
-                summary_data[f"Beta({a},{b})/mean"] = mean_val
-                summary_data[f"Beta({a},{b})/variance"] = var_val
+                summary_data = {
+                    "mean": mean_val,
+                    "variance": var_val
+                }
                 if not np.isnan(mode_val):
-                    summary_data[f"Beta({a},{b})/mode"] = mode_val
-            
-            # 一次性记录所有摘要统计信息
-            current_run.log(summary_data)
-            
-            # 对每个 x 值，我们将创建一个新的数据点
-            # 这里我们选择一个较低的采样频率，以保持数据量合理
-            # 这里选择50个点，足够绘制平滑的曲线而不会产生过多数据点
-            sampled_indices = np.linspace(0, len(x_values)-1, 50, dtype=int)
-            sampled_x = x_values[sampled_indices]
-            
-            # 为每个 x 值记录一个数据点，包含不同分布的 PDF 值
-            for step, x in enumerate(sampled_x):
-                data_point = {"x": float(x)}  # 记录 x 值
+                    summary_data["mode"] = mode_val
                 
-                # 计算并记录每个分布在当前 x 值的 PDF 值
-                for a, b in alpha_beta_pairs:
+                # 记录摘要统计信息
+                current_run.log(summary_data)
+                
+                # 对每个 x 值记录一个数据点
+                for step, x in enumerate(x_values):
                     pdf_value = float(beta.pdf(x, a, b))
-                    data_point[f"Beta({a},{b})_pdf"] = pdf_value
+                    current_run.log({
+                        "x": float(x),
+                        "pdf": pdf_value
+                    }, step=step)
                 
-                # 使用当前步骤作为 x 轴的坐标
-                current_run.log(data_point, step=step)
-                
-            print("Beta 分布数据直接记录到 W&B，可在 W&B 界面上查看。")
-            print("提示: 在 W&B 界面上，您可以构建自定义图表，选择 '导入指标' 并选择包含 '_pdf' 后缀的指标。")
-        
-        except Exception as e:
-            print(f"W&B 记录过程中发生错误: {e}")
-            import traceback
-            traceback.print_exc()
-
-        finally:
-            # 确保 wandb.finish 被调用以关闭运行
-            if current_run:
-                current_run.finish()
-                print("W&B 运行已完成。")
+                print(f"Beta({a},{b}) 分布数据已记录到 W&B。")
                 print(f"W&B 运行 URL: {current_run.url}")
+            
+            except Exception as e:
+                print(f"W&B 记录过程中发生错误: {e}")
+                import traceback
+                traceback.print_exc()
+
+            finally:
+                # 确保 wandb.finish 被调用以关闭运行
+                if current_run:
+                    current_run.finish()
+                    print(f"Beta({a},{b}) 的 W&B 运行已完成。")
 
     elif backend == "local":
         # 本地绘图逻辑保持不变

@@ -1,0 +1,20 @@
+{
+    "rules": [
+        {
+            "name": "Auto Git Commit",
+            "description": "在代码变更后自动提交到Git",
+            "triggers": [
+                {
+                    "type": "onFileChange",
+                    "pattern": "**/*.py"
+                }
+            ],
+            "actions": [
+                {
+                    "type": "runCommand",
+                    "command": "git add . && git commit -m \"[Auto] Update code: $(date +'%Y-%m-%d %H:%M:%S')\""
+                }
+            ]
+        }
+    ]
+} 
