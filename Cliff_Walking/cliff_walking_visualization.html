@@ -805,7 +805,11 @@
           const iterations = valueAgent.valueIteration();
           updateValueGrid(valueAgent, 'valueIterationValueGrid');
           updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
-          showResults('价值迭代', valueAgent, {iterationCount: iterations});
+          showResults('价值迭代', valueAgent, {
+            iterationCount: iterations,
+            maxDelta: valueAgent.maxDelta,
+            isComplete: valueAgent.isComplete
+          });
         });
         
         document.getElementById('singleStepPolicyBtn').addEventListener('click', function() {
