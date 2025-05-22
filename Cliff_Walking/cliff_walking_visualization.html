@@ -22,7 +22,14 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        #gridContainer {
+        .algorithm-container {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .grid-wrapper {
             display: flex;
             justify-content: center;
             gap: 40px;
@@ -131,24 +138,43 @@
             </div>
         </div>
         
-        <div id="gridContainer">
-            <div>
-                <h3>状态价值</h3>
-                <div class="grid-container" id="valueGrid"></div>
-            </div>
-            <div>
-                <h3>最优策略</h3>
-                <div class="grid-container" id="policyGrid"></div>
-            </div>
-        </div>
-        
         <div class="controls">
             <button id="policyIterationBtn">运行策略迭代</button>
             <button id="valueIterationBtn">运行价值迭代</button>
             <button id="resetBtn">重置环境</button>
         </div>
         
-        <div id="results"></div>
+        <div id="algorithmContainers">
+            <div id="policyIterationContainer" class="algorithm-container">
+                <h2>策略迭代</h2>
+                <div id="policyIterationResults" class="results"></div>
+                <div class="grid-wrapper">
+                    <div>
+                        <h3>状态价值</h3>
+                        <div class="grid-container" id="policyIterationValueGrid"></div>
+                    </div>
+                    <div>
+                        <h3>最优策略</h3>
+                        <div class="grid-container" id="policyIterationPolicyGrid"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="valueIterationContainer" class="algorithm-container">
+                <h2>价值迭代</h2>
+                <div id="valueIterationResults" class="results"></div>
+                <div class="grid-wrapper">
+                    <div>
+                        <h3>状态价值</h3>
+                        <div class="grid-container" id="valueIterationValueGrid"></div>
+                    </div>
+                    <div>
+                        <h3>最优策略</h3>
+                        <div class="grid-container" id="valueIterationPolicyGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -451,44 +477,17 @@
           generateRandomPolicy()
         );
         
+        // 创建所有网格
+        function createAllGrids() {
+          createGrid('policyIterationValueGrid');
+          createGrid('policyIterationPolicyGrid');
+          createGrid('valueIterationValueGrid');
+          createGrid('valueIterationPolicyGrid');
+        }
+        
         // 创建网格
-        function createGrid() {
-          createValueGrid();
-          createPolicyGrid();
-        }
-        
-        // 创建状态价值网格
-        function createValueGrid() {
-          const gridContainer = document.getElementById('valueGrid');
-          gridContainer.innerHTML = '';
-          
-          for (let i = 0; i < env.nrow; i++) {
-            for (let j = 0; j < env.ncol; j++) {
-              const cell = document.createElement('div');
-              cell.className = 'cell';
-              
-              const state = i * env.ncol + j;
-              
-              // 设置单元格类型
-              if (state === startPos) {
-                cell.classList.add('start');
-                cell.innerHTML = 'S';
-              } else if (state === goalPos[0]) {
-                cell.classList.add('goal');
-                cell.innerHTML = 'G';
-              } else if (cliffPos.includes(state)) {
-                cell.classList.add('cliff');
-                cell.innerHTML = 'C';
-              }
-              
-              gridContainer.appendChild(cell);
-            }
-          }
-        }
-        
-        // 创建策略网格
-        function createPolicyGrid() {
-          const gridContainer = document.getElementById('policyGrid');
+        function createGrid(gridId) {
+          const gridContainer = document.getElementById(gridId);
           gridContainer.innerHTML = '';
           
           for (let i = 0; i < env.nrow; i++) {
@@ -518,11 +517,26 @@
         // 显示初始环境状态
         function showInitialState() {
           // 显示所有状态值为0
-          const valueCells = document.querySelectorAll('#valueGrid .cell');
+          showInitialValues('policyIterationValueGrid');
+          showInitialValues('valueIterationValueGrid');
+          
+          // 显示随机策略
+          showInitialPolicies('policyIterationPolicyGrid');
+          showInitialPolicies('valueIterationPolicyGrid');
+          
+          // 清空结果区域
+          document.getElementById('policyIterationResults').innerHTML = '';
+          document.getElementById('valueIterationResults').innerHTML = '';
+        }
+        
+        // 显示初始状态值
+        function showInitialValues(gridId) {
+          const cells = document.querySelectorAll(`#${gridId} .cell`);
+          
           for (let i = 0; i < env.nrow; i++) {
             for (let j = 0; j < env.ncol; j++) {
               const state = i * env.ncol + j;
-              const cell = valueCells[state];
+              const cell = cells[state];
               
               // 显示状态价值
               if (state === startPos) {
@@ -536,13 +550,16 @@
               }
             }
           }
+        }
+        
+        // 显示初始随机策略
+        function showInitialPolicies(gridId) {
+          const cells = document.querySelectorAll(`#${gridId} .cell`);
           
-          // 显示随机策略
-          const policyCells = document.querySelectorAll('#policyGrid .cell');
           for (let i = 0; i < env.nrow; i++) {
             for (let j = 0; j < env.ncol; j++) {
               const state = i * env.ncol + j;
-              const cell = policyCells[state];
+              const cell = cells[state];
               
               if (state === startPos) {
                 cell.innerHTML = 'S';
@@ -559,15 +576,9 @@
           }
         }
         
-        // 更新网格显示状态价值和策略
-        function updateGrid(agent) {
-          updateValueGrid(agent);
-          updatePolicyGrid(agent);
-        }
-        
         // 更新状态价值网格
-        function updateValueGrid(agent) {
-          const cells = document.querySelectorAll('#valueGrid .cell');
+        function updateValueGrid(agent, gridId) {
+          const cells = document.querySelectorAll(`#${gridId} .cell`);
           
           for (let i = 0; i < env.nrow; i++) {
             for (let j = 0; j < env.ncol; j++) {
@@ -595,8 +606,8 @@
         }
         
         // 更新策略网格
-        function updatePolicyGrid(agent) {
-          const cells = document.querySelectorAll('#policyGrid .cell');
+        function updatePolicyGrid(agent, gridId) {
+          const cells = document.querySelectorAll(`#${gridId} .cell`);
           
           for (let i = 0; i < env.nrow; i++) {
             for (let j = 0; j < env.ncol; j++) {
@@ -631,15 +642,13 @@
           
           // 显示初始状态
           showInitialState();
-          
-          // 清空结果区域
-          document.getElementById('results').innerHTML = '';
         }
         
         // 显示结果
         function showResults(algorithmName, agent, iterations) {
-          const resultsDiv = document.getElementById('results');
-          let html = `<h2>${algorithmName}结果</h2>`;
+          const resultsId = algorithmName === '策略迭代' ? 'policyIterationResults' : 'valueIterationResults';
+          const resultsDiv = document.getElementById(resultsId);
+          let html = '';
           
           if (algorithmName === '策略迭代') {
             html += `<p>策略迭代次数: ${iterations.policyIterations}</p>`;
@@ -655,14 +664,16 @@
         document.getElementById('policyIterationBtn').addEventListener('click', function() {
           const policyAgent = new PolicyIteration(env);
           const iterations = policyAgent.policyIteration();
-          updateGrid(policyAgent);
+          updateValueGrid(policyAgent, 'policyIterationValueGrid');
+          updatePolicyGrid(policyAgent, 'policyIterationPolicyGrid');
           showResults('策略迭代', policyAgent, iterations);
         });
         
         document.getElementById('valueIterationBtn').addEventListener('click', function() {
           const valueAgent = new ValueIteration(env);
           const iterations = valueAgent.valueIteration();
-          updateGrid(valueAgent);
+          updateValueGrid(valueAgent, 'valueIterationValueGrid');
+          updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
           showResults('价值迭代', valueAgent, iterations);
         });
         
@@ -670,8 +681,8 @@
           resetEnvironment();
         });
         
-        // 初始绘制网格
-        createGrid();
+        // 初始化所有网格
+        createAllGrids();
         
         // 初始显示环境状态
         showInitialState();
