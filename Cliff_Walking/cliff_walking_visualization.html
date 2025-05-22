@@ -434,6 +434,23 @@
         const goalPos = [env.nrow * env.ncol - 1];
         const startPos = (env.nrow - 1) * env.ncol;
         
+        // 生成随机策略
+        function generateRandomPolicy() {
+          // 创建大小为4的数组，表示四个动作的概率
+          const policy = Array(4).fill(0);
+          
+          // 随机选择一个动作赋予100%概率
+          const randomAction = Math.floor(Math.random() * 4);
+          policy[randomAction] = 1.0;
+          
+          return policy;
+        }
+        
+        // 创建初始随机策略
+        let randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
+          generateRandomPolicy()
+        );
+        
         // 创建网格
         function createGrid() {
           createValueGrid();
@@ -494,6 +511,50 @@
               }
               
               gridContainer.appendChild(cell);
+            }
+          }
+        }
+        
+        // 显示初始环境状态
+        function showInitialState() {
+          // 显示所有状态值为0
+          const valueCells = document.querySelectorAll('#valueGrid .cell');
+          for (let i = 0; i < env.nrow; i++) {
+            for (let j = 0; j < env.ncol; j++) {
+              const state = i * env.ncol + j;
+              const cell = valueCells[state];
+              
+              // 显示状态价值
+              if (state === startPos) {
+                cell.innerHTML = `S<br><span class="value-text">0.00</span>`;
+              } else if (state === goalPos[0]) {
+                cell.innerHTML = `G<br><span class="value-text">0.00</span>`;
+              } else if (cliffPos.includes(state)) {
+                cell.innerHTML = `C<br><span class="value-text">0.00</span>`;
+              } else {
+                cell.innerHTML = `<span class="value-text">0.00</span>`;
+              }
+            }
+          }
+          
+          // 显示随机策略
+          const policyCells = document.querySelectorAll('#policyGrid .cell');
+          for (let i = 0; i < env.nrow; i++) {
+            for (let j = 0; j < env.ncol; j++) {
+              const state = i * env.ncol + j;
+              const cell = policyCells[state];
+              
+              if (state === startPos) {
+                cell.innerHTML = 'S';
+              } else if (state === goalPos[0]) {
+                cell.innerHTML = 'G';
+              } else if (cliffPos.includes(state)) {
+                cell.innerHTML = 'C';
+              } else {
+                // 显示随机策略方向
+                const best_a = randomPolicies[state].indexOf(1.0);
+                cell.innerHTML = actionMeaning[best_a];
+              }
             }
           }
         }
@@ -561,6 +622,20 @@
           }
         }
         
+        // 重置环境
+        function resetEnvironment() {
+          // 重新生成随机策略
+          randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
+            generateRandomPolicy()
+          );
+          
+          // 显示初始状态
+          showInitialState();
+          
+          // 清空结果区域
+          document.getElementById('results').innerHTML = '';
+        }
+        
         // 显示结果
         function showResults(algorithmName, agent, iterations) {
           const resultsDiv = document.getElementById('results');
@@ -574,15 +649,6 @@
           }
           
           resultsDiv.innerHTML = html;
-        }
-        
-        // 重置环境
-        function resetEnvironment() {
-          // 重新创建网格
-          createGrid();
-          
-          // 清空结果区域
-          document.getElementById('results').innerHTML = '';
         }
         
         // 绑定按钮事件
@@ -606,6 +672,9 @@
         
         // 初始绘制网格
         createGrid();
+        
+        // 初始显示环境状态
+        showInitialState();
     </script>
 </body>
 </html> 
