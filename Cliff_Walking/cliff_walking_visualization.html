@@ -407,7 +407,7 @@
 
         // 初始化环境
         const env = new CliffWalkingEnv();
-        const actionMeaning = ['^', 'v', '<', '>'];
+        const actionMeaning = ['↑', '↓', '←', '→'];
         
         // 悬崖位置和目标位置
         const cliffPos = Array.from({length: 10}, (_, i) => (env.nrow - 1) * env.ncol + i + 1);
