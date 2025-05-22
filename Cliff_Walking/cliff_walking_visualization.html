@@ -15,12 +15,18 @@
             color: #333;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #gridContainer {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
         }
         .grid-container {
             display: grid;
@@ -125,7 +131,16 @@
             </div>
         </div>
         
-        <div class="grid-container" id="grid"></div>
+        <div id="gridContainer">
+            <div>
+                <h3>状态价值</h3>
+                <div class="grid-container" id="valueGrid"></div>
+            </div>
+            <div>
+                <h3>最优策略</h3>
+                <div class="grid-container" id="policyGrid"></div>
+            </div>
+        </div>
         
         <div class="controls">
             <button id="policyIterationBtn">运行策略迭代</button>
@@ -421,7 +436,42 @@
         
         // 创建网格
         function createGrid() {
-          const gridContainer = document.getElementById('grid');
+          createValueGrid();
+          createPolicyGrid();
+        }
+        
+        // 创建状态价值网格
+        function createValueGrid() {
+          const gridContainer = document.getElementById('valueGrid');
+          gridContainer.innerHTML = '';
+          
+          for (let i = 0; i < env.nrow; i++) {
+            for (let j = 0; j < env.ncol; j++) {
+              const cell = document.createElement('div');
+              cell.className = 'cell';
+              
+              const state = i * env.ncol + j;
+              
+              // 设置单元格类型
+              if (state === startPos) {
+                cell.classList.add('start');
+                cell.innerHTML = 'S';
+              } else if (state === goalPos[0]) {
+                cell.classList.add('goal');
+                cell.innerHTML = 'G';
+              } else if (cliffPos.includes(state)) {
+                cell.classList.add('cliff');
+                cell.innerHTML = 'C';
+              }
+              
+              gridContainer.appendChild(cell);
+            }
+          }
+        }
+        
+        // 创建策略网格
+        function createPolicyGrid() {
+          const gridContainer = document.getElementById('policyGrid');
           gridContainer.innerHTML = '';
           
           for (let i = 0; i < env.nrow; i++) {
@@ -450,7 +500,13 @@
         
         // 更新网格显示状态价值和策略
         function updateGrid(agent) {
-          const cells = document.querySelectorAll('.cell');
+          updateValueGrid(agent);
+          updatePolicyGrid(agent);
+        }
+        
+        // 更新状态价值网格
+        function updateValueGrid(agent) {
+          const cells = document.querySelectorAll('#valueGrid .cell');
           
           for (let i = 0; i < env.nrow; i++) {
             for (let j = 0; j < env.ncol; j++) {
@@ -471,9 +527,35 @@
                 cell.classList.add('cliff');
                 cell.innerHTML = `C<br><span class="value-text">${stateValue}</span>`;
               } else {
+                cell.innerHTML = `<span class="value-text">${stateValue}</span>`;
+              }
+            }
+          }
+        }
+        
+        // 更新策略网格
+        function updatePolicyGrid(agent) {
+          const cells = document.querySelectorAll('#policyGrid .cell');
+          
+          for (let i = 0; i < env.nrow; i++) {
+            for (let j = 0; j < env.ncol; j++) {
+              const state = i * env.ncol + j;
+              const cell = cells[state];
+              
+              // 设置单元格类型和内容
+              if (state === startPos) {
+                cell.classList.add('start');
+                cell.innerHTML = 'S';
+              } else if (state === goalPos[0]) {
+                cell.classList.add('goal');
+                cell.innerHTML = 'G';
+              } else if (cliffPos.includes(state)) {
+                cell.classList.add('cliff');
+                cell.innerHTML = 'C';
+              } else {
                 // 找到最优动作
                 const best_a = agent.pi[state].indexOf(Math.max(...agent.pi[state]));
-                cell.innerHTML = `${actionMeaning[best_a]}<br><span class="value-text">${stateValue}</span>`;
+                cell.innerHTML = actionMeaning[best_a];
               }
             }
           }
@@ -493,9 +575,6 @@
           
           resultsDiv.innerHTML = html;
         }
-        
-        // 初始绘制网格
-        createGrid();
         
         // 重置环境
         function resetEnvironment() {
@@ -524,6 +603,9 @@
         document.getElementById('resetBtn').addEventListener('click', function() {
           resetEnvironment();
         });
+        
+        // 初始绘制网格
+        createGrid();
     </script>
 </body>
 </html> 
