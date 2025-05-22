@@ -771,11 +771,7 @@
           let html = '';
           
           if (algorithmName === '策略迭代') {
-            html += `<p>策略迭代次数: ${iterations.policyIterations}</p>`;
-            html += `<p>每次策略评估的迭代次数: ${iterations.policyEvaluation.join(', ')}</p>`;
-            if (iterations.isComplete) {
-              html += `<p>策略已收敛!</p>`;
-            }
+            html += `<p>策略迭代次数: ${iterations.policyIterations} | 每次策略评估的迭代次数: ${iterations.policyEvaluation.join(', ')} ${iterations.isComplete ? '| 策略已收敛!' : ''}</p>`;
           } else {
             html += `<p>价值迭代次数: ${iterations.iterationCount} | 最大误差: ${iterations.maxDelta?.toFixed(5) || 'N/A'} | ${iterations.isComplete ? '价值已收敛!' : ''}</p>`;
           }
