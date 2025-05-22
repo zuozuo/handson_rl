@@ -49,11 +49,13 @@
             height: 40px;
             border: 1px solid #ccc;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             background-color: #fff;
             font-weight: bold;
+            padding: 2px;
         }
         .start {
             background-color: #a8e6cf;
@@ -73,8 +75,9 @@
         }
         .value-text {
             font-weight: normal;
-            font-size: 14px;
+            font-size: 12px;
             color: #555;
+            margin-top: 2px;
         }
         .legend {
             display: flex;
@@ -618,10 +621,13 @@
               
               // 显示状态价值
               if (state === startPos) {
+                cell.classList.add('start');
                 cell.innerHTML = `S<br><span class="value-text">0.00</span>`;
               } else if (state === goalPos[0]) {
+                cell.classList.add('goal');
                 cell.innerHTML = `G<br><span class="value-text">0.00</span>`;
               } else if (cliffPos.includes(state)) {
+                cell.classList.add('cliff');
                 cell.innerHTML = `C<br><span class="value-text">0.00</span>`;
               } else {
                 cell.innerHTML = `<span class="value-text">0.00</span>`;
