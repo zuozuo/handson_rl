@@ -57,6 +57,11 @@
             font-size: 12px;
             color: #666;
         }
+        .value-text {
+            font-weight: normal;
+            font-size: 14px;
+            color: #555;
+        }
         .legend {
             display: flex;
             justify-content: center;
@@ -458,17 +463,17 @@
               // 设置单元格类型和内容
               if (state === startPos) {
                 cell.classList.add('start');
-                cell.innerHTML = `S<br>${stateValue}`;
+                cell.innerHTML = `S<br><span class="value-text">${stateValue}</span>`;
               } else if (state === goalPos[0]) {
                 cell.classList.add('goal');
-                cell.innerHTML = `G<br>${stateValue}`;
+                cell.innerHTML = `G<br><span class="value-text">${stateValue}</span>`;
               } else if (cliffPos.includes(state)) {
                 cell.classList.add('cliff');
-                cell.innerHTML = `C<br>${stateValue}`;
+                cell.innerHTML = `C<br><span class="value-text">${stateValue}</span>`;
               } else {
                 // 找到最优动作
                 const best_a = agent.pi[state].indexOf(Math.max(...agent.pi[state]));
-                cell.innerHTML = `${actionMeaning[best_a]}<br>${stateValue}`;
+                cell.innerHTML = `${actionMeaning[best_a]}<br><span class="value-text">${stateValue}</span>`;
               }
             }
           }
