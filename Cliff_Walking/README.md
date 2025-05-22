@@ -32,6 +32,10 @@ open cliff_walking_visualization.html
 - 点击"运行价值迭代"按钮执行价值迭代算法
 - 实时显示每个状态的价值和最优动作
 
+### 可视化界面预览
+
+![悬崖漫步可视化界面](cliff_walking.jpg)
+
 ## 代码结构
 
 代码主要包含以下几个类：
