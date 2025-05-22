@@ -93,6 +93,12 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        #resetBtn {
+            background-color: #f44336;
+        }
+        #resetBtn:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -119,6 +125,7 @@
         <div class="controls">
             <button id="policyIterationBtn">运行策略迭代</button>
             <button id="valueIterationBtn">运行价值迭代</button>
+            <button id="resetBtn">重置环境</button>
         </div>
         
         <div id="results"></div>
@@ -489,6 +496,15 @@
         // 初始绘制网格
         createGrid();
         
+        // 重置环境
+        function resetEnvironment() {
+          // 重新创建网格
+          createGrid();
+          
+          // 清空结果区域
+          document.getElementById('results').innerHTML = '';
+        }
+        
         // 绑定按钮事件
         document.getElementById('policyIterationBtn').addEventListener('click', function() {
           const policyAgent = new PolicyIteration(env);
@@ -502,6 +518,10 @@
           const iterations = valueAgent.valueIteration();
           updateGrid(valueAgent);
           showResults('价值迭代', valueAgent, iterations);
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+          resetEnvironment();
         });
     </script>
 </body>
