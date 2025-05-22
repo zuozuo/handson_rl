@@ -426,19 +426,16 @@
               
               const state = i * env.ncol + j;
               
-              // 显示状态编号
-              cell.innerHTML = `<span class="state-value">${state}</span>`;
-              
               // 设置单元格类型
               if (state === startPos) {
                 cell.classList.add('start');
-                cell.innerHTML += 'S';
+                cell.innerHTML = 'S';
               } else if (state === goalPos[0]) {
                 cell.classList.add('goal');
-                cell.innerHTML += 'G';
+                cell.innerHTML = 'G';
               } else if (cliffPos.includes(state)) {
                 cell.classList.add('cliff');
-                cell.innerHTML += 'C';
+                cell.innerHTML = 'C';
               }
               
               gridContainer.appendChild(cell);
@@ -457,22 +454,21 @@
               
               // 显示状态价值
               const stateValue = agent.v[state].toFixed(2);
-              cell.innerHTML = `<span class="state-value">${state}</span>`;
               
               // 设置单元格类型和内容
               if (state === startPos) {
                 cell.classList.add('start');
-                cell.innerHTML += `S<br>${stateValue}`;
+                cell.innerHTML = `S<br>${stateValue}`;
               } else if (state === goalPos[0]) {
                 cell.classList.add('goal');
-                cell.innerHTML += `G<br>${stateValue}`;
+                cell.innerHTML = `G<br>${stateValue}`;
               } else if (cliffPos.includes(state)) {
                 cell.classList.add('cliff');
-                cell.innerHTML += `C<br>${stateValue}`;
+                cell.innerHTML = `C<br>${stateValue}`;
               } else {
                 // 找到最优动作
                 const best_a = agent.pi[state].indexOf(Math.max(...agent.pi[state]));
-                cell.innerHTML += `${actionMeaning[best_a]}<br>${stateValue}`;
+                cell.innerHTML = `${actionMeaning[best_a]}<br>${stateValue}`;
               }
             }
           }
