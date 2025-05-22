@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import random
 
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+
 class CliffWalkingEnv:
     """悬崖漫步环境"""
     def __init__(self, ncol=12, nrow=4):
@@ -258,19 +262,19 @@ if __name__ == "__main__":
     
     plt.subplot(1, 2, 1)
     plt.plot(sarsa_returns, label='Sarsa', alpha=0.6)
-    plt.plot(moving_average(sarsa_returns, 21), label='Sarsa (平滑)', linewidth=2)
-    plt.xlabel('回合数')
-    plt.ylabel('回报')
-    plt.title('Sarsa算法在悬崖漫步环境中的学习曲线')
+    plt.plot(moving_average(sarsa_returns, 21), label='Sarsa (Smoothed)', linewidth=2)
+    plt.xlabel('Episodes')
+    plt.ylabel('Return')
+    plt.title('Sarsa Learning Curve in Cliff Walking')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
     plt.subplot(1, 2, 2)
     plt.plot(qlearning_returns, label='Q-learning', alpha=0.6)
-    plt.plot(moving_average(qlearning_returns, 21), label='Q-learning (平滑)', linewidth=2)
-    plt.xlabel('回合数')
-    plt.ylabel('回报')
-    plt.title('Q-learning算法在悬崖漫步环境中的学习曲线')
+    plt.plot(moving_average(qlearning_returns, 21), label='Q-learning (Smoothed)', linewidth=2)
+    plt.xlabel('Episodes')
+    plt.ylabel('Return')
+    plt.title('Q-learning Learning Curve in Cliff Walking')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
@@ -287,9 +291,9 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 6))
     plt.plot(moving_average(sarsa_returns, 21), label='Sarsa', linewidth=2)
     plt.plot(moving_average(qlearning_returns, 21), label='Q-learning', linewidth=2)
-    plt.xlabel('回合数')
-    plt.ylabel('回报')
-    plt.title('Sarsa vs Q-learning 在悬崖漫步环境中的学习曲线对比')
+    plt.xlabel('Episodes')
+    plt.ylabel('Return')
+    plt.title('Sarsa vs Q-learning Learning Curves Comparison')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.savefig('sarsa_vs_qlearning.png', dpi=300, bbox_inches='tight')
