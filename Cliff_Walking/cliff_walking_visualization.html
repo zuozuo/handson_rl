@@ -496,10 +496,12 @@
             
             this.maxDelta = delta;
             
+            // 在每次迭代后更新策略，而不是等到收敛
+            this.extractPolicy();
+            
             // 检查是否收敛
             if (delta < this.theta || this.iterationCount > 1000) {
               this.isComplete = true;
-              this.extractPolicy();
             }
             
             return {
@@ -831,10 +833,8 @@
           // 更新视图
           updateValueGrid(valueAgent, 'valueIterationValueGrid');
           
-          // 如果完成了，更新策略
-          if (iterations.isComplete) {
-            updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
-          }
+          // 每次迭代后都更新策略网格，不再需要等到迭代完成
+          updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
           
           showResults('价值迭代', valueAgent, iterations);
         });
