@@ -117,6 +117,12 @@
         #resetBtn:hover {
             background-color: #d32f2f;
         }
+        .reset-btn {
+            background-color: #f44336;
+        }
+        .reset-btn:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -138,12 +144,6 @@
             </div>
         </div>
         
-        <div class="controls">
-            <button id="policyIterationBtn">运行策略迭代</button>
-            <button id="valueIterationBtn">运行价值迭代</button>
-            <button id="resetBtn">重置环境</button>
-        </div>
-        
         <div id="algorithmContainers">
             <div id="policyIterationContainer" class="algorithm-container">
                 <h2>策略迭代</h2>
@@ -157,6 +157,10 @@
                         <h3>最优策略</h3>
                         <div class="grid-container" id="policyIterationPolicyGrid"></div>
                     </div>
+                </div>
+                <div class="controls">
+                    <button id="policyIterationBtn">运行策略迭代</button>
+                    <button id="resetPolicyIterationBtn" class="reset-btn">重置策略迭代</button>
                 </div>
             </div>
             
@@ -172,6 +176,10 @@
                         <h3>最优策略</h3>
                         <div class="grid-container" id="valueIterationPolicyGrid"></div>
                     </div>
+                </div>
+                <div class="controls">
+                    <button id="valueIterationBtn">运行价值迭代</button>
+                    <button id="resetValueIterationBtn" class="reset-btn">重置价值迭代</button>
                 </div>
             </div>
         </div>
@@ -644,6 +652,36 @@
           showInitialState();
         }
         
+        // 重置策略迭代环境
+        function resetPolicyIteration() {
+          // 重新生成随机策略
+          randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
+            generateRandomPolicy()
+          );
+          
+          // 显示初始状态
+          showInitialValues('policyIterationValueGrid');
+          showInitialPolicies('policyIterationPolicyGrid');
+          
+          // 清空结果区域
+          document.getElementById('policyIterationResults').innerHTML = '';
+        }
+        
+        // 重置价值迭代环境
+        function resetValueIteration() {
+          // 重新生成随机策略
+          randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
+            generateRandomPolicy()
+          );
+          
+          // 显示初始状态
+          showInitialValues('valueIterationValueGrid');
+          showInitialPolicies('valueIterationPolicyGrid');
+          
+          // 清空结果区域
+          document.getElementById('valueIterationResults').innerHTML = '';
+        }
+        
         // 显示结果
         function showResults(algorithmName, agent, iterations) {
           const resultsId = algorithmName === '策略迭代' ? 'policyIterationResults' : 'valueIterationResults';
@@ -677,8 +715,12 @@
           showResults('价值迭代', valueAgent, iterations);
         });
         
-        document.getElementById('resetBtn').addEventListener('click', function() {
-          resetEnvironment();
+        document.getElementById('resetPolicyIterationBtn').addEventListener('click', function() {
+          resetPolicyIteration();
+        });
+        
+        document.getElementById('resetValueIterationBtn').addEventListener('click', function() {
+          resetValueIteration();
         });
         
         // 初始化所有网格
