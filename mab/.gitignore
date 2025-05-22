@@ -25,3 +25,7 @@ ENV/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+.auto-coder/
+/actions/
+/output.txt
