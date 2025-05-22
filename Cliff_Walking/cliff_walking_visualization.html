@@ -777,11 +777,7 @@
               html += `<p>策略已收敛!</p>`;
             }
           } else {
-            html += `<p>价值迭代次数: ${iterations.iterationCount}</p>`;
-            html += `<p>最大误差: ${iterations.maxDelta?.toFixed(5) || 'N/A'}</p>`;
-            if (iterations.isComplete) {
-              html += `<p>价值已收敛!</p>`;
-            }
+            html += `<p>价值迭代次数: ${iterations.iterationCount} | 最大误差: ${iterations.maxDelta?.toFixed(5) || 'N/A'} | ${iterations.isComplete ? '价值已收敛!' : ''}</p>`;
           }
           
           resultsDiv.innerHTML = html;
