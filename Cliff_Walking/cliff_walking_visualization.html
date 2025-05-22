@@ -160,6 +160,7 @@
                 </div>
                 <div class="controls">
                     <button id="policyIterationBtn">运行策略迭代</button>
+                    <button id="singleStepPolicyBtn">运行一步迭代</button>
                     <button id="resetPolicyIterationBtn" class="reset-btn">重置策略迭代</button>
                 </div>
             </div>
@@ -179,6 +180,7 @@
                 </div>
                 <div class="controls">
                     <button id="valueIterationBtn">运行价值迭代</button>
+                    <button id="singleStepValueBtn">运行一步迭代</button>
                     <button id="resetValueIterationBtn" class="reset-btn">重置价值迭代</button>
                 </div>
             </div>
@@ -289,6 +291,9 @@
             this.pi = Array(env.nrow * env.ncol).fill().map(() => 
               Array(4).fill(0.25)
             ); // 初始策略为均匀随机
+            this.policyStable = false; // 策略是否稳定
+            this.iterationCount = 0; // 迭代次数
+            this.evaluationIterations = []; // 每次策略评估的迭代次数
           }
 
           /**
@@ -363,29 +368,57 @@
            * 策略迭代
            */
           policyIteration() {
-            const iterations = {
-              policyEvaluation: [],
-              policyIterations: 0
-            };
+            this.policyStable = false;
+            this.iterationCount = 0;
+            this.evaluationIterations = [];
             
-            while (true) {
+            while (!this.policyStable) {
               const evalIterations = this.policyEvaluation();
-              iterations.policyEvaluation.push(evalIterations);
+              this.evaluationIterations.push(evalIterations);
               
-              const policy_stable = this.policyImprovement();
-              iterations.policyIterations++;
-              
-              if (policy_stable) {
-                break;
-              }
+              this.policyStable = this.policyImprovement();
+              this.iterationCount++;
               
               // 防止无限循环
-              if (iterations.policyIterations > 20) {
+              if (this.iterationCount > 20) {
                 break;
               }
             }
             
-            return iterations;
+            return {
+              policyIterations: this.iterationCount,
+              policyEvaluation: this.evaluationIterations
+            };
+          }
+          
+          /**
+           * 执行单步策略迭代
+           */
+          singleStepIteration() {
+            if (this.policyStable) {
+              return {
+                policyIterations: this.iterationCount,
+                policyEvaluation: this.evaluationIterations,
+                isComplete: true
+              };
+            }
+            
+            const evalIterations = this.policyEvaluation();
+            this.evaluationIterations.push(evalIterations);
+            
+            this.policyStable = this.policyImprovement();
+            this.iterationCount++;
+            
+            // 防止无限循环
+            if (this.iterationCount > 20) {
+              this.policyStable = true;
+            }
+            
+            return {
+              policyIterations: this.iterationCount,
+              policyEvaluation: this.evaluationIterations,
+              isComplete: this.policyStable
+            };
           }
         }
 
@@ -401,43 +434,81 @@
             this.pi = Array(env.nrow * env.ncol).fill().map(() => 
               Array(4).fill(0.25)
             ); // 策略
+            this.iterationCount = 0; // 迭代次数
+            this.isComplete = false; // 是否完成
+            this.maxDelta = Infinity; // 最大误差
           }
 
           /**
            * 价值迭代
            */
           valueIteration() {
-            let iteration = 0;
+            this.iterationCount = 0;
+            this.isComplete = false;
+            this.maxDelta = Infinity;
             
-            while (true) {
-              let delta = 0;
-              iteration++;
-              
-              for (let s = 0; s < this.env.nrow * this.env.ncol; s++) {
-                const v = this.v[s];
-                
-                // 计算每个动作的价值
-                const q_sa = Array(4).fill(0);
-                
-                for (let a = 0; a < 4; a++) {
-                  for (const {p, next_state, reward} of this.env.P[s][a]) {
-                    q_sa[a] += p * (reward + this.gamma * this.v[next_state]);
-                  }
-                }
-                
-                // 更新状态价值为最大的动作价值
-                this.v[s] = Math.max(...q_sa);
-                
-                // 计算最大误差
-                delta = Math.max(delta, Math.abs(v - this.v[s]));
-              }
-              
-              if (delta < this.theta || iteration > 1000) {
+            while (!this.isComplete) {
+              const result = this.singleStepIteration();
+              if (result.isComplete) {
                 break;
               }
             }
             
-            // 根据价值函数提取最优策略
+            return this.iterationCount;
+          }
+          
+          /**
+           * 执行单步价值迭代
+           */
+          singleStepIteration() {
+            if (this.isComplete) {
+              return {
+                iterationCount: this.iterationCount,
+                isComplete: true
+              };
+            }
+            
+            let delta = 0;
+            this.iterationCount++;
+            
+            for (let s = 0; s < this.env.nrow * this.env.ncol; s++) {
+              const v = this.v[s];
+              
+              // 计算每个动作的价值
+              const q_sa = Array(4).fill(0);
+              
+              for (let a = 0; a < 4; a++) {
+                for (const {p, next_state, reward} of this.env.P[s][a]) {
+                  q_sa[a] += p * (reward + this.gamma * this.v[next_state]);
+                }
+              }
+              
+              // 更新状态价值为最大的动作价值
+              this.v[s] = Math.max(...q_sa);
+              
+              // 计算最大误差
+              delta = Math.max(delta, Math.abs(v - this.v[s]));
+            }
+            
+            this.maxDelta = delta;
+            
+            // 检查是否收敛
+            if (delta < this.theta || this.iterationCount > 1000) {
+              this.isComplete = true;
+              this.extractPolicy();
+            }
+            
+            return {
+              iterationCount: this.iterationCount,
+              maxDelta: this.maxDelta,
+              isComplete: this.isComplete
+            };
+          }
+          
+          /**
+           * 从价值函数提取策略
+           */
+          extractPolicy() {
             for (let s = 0; s < this.env.nrow * this.env.ncol; s++) {
               const q_sa = Array(4).fill(0);
               
@@ -454,8 +525,6 @@
               this.pi[s] = Array(4).fill(0);
               this.pi[s][best_a] = 1.0;
             }
-            
-            return iteration;
           }
         }
 
@@ -659,6 +728,9 @@
             generateRandomPolicy()
           );
           
+          // 重置算法实例
+          policyAgent = null;
+          
           // 显示初始状态
           showInitialValues('policyIterationValueGrid');
           showInitialPolicies('policyIterationPolicyGrid');
@@ -673,6 +745,9 @@
           randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
             generateRandomPolicy()
           );
+          
+          // 重置算法实例
+          valueAgent = null;
           
           // 显示初始状态
           showInitialValues('valueIterationValueGrid');
@@ -691,16 +766,27 @@
           if (algorithmName === '策略迭代') {
             html += `<p>策略迭代次数: ${iterations.policyIterations}</p>`;
             html += `<p>每次策略评估的迭代次数: ${iterations.policyEvaluation.join(', ')}</p>`;
+            if (iterations.isComplete) {
+              html += `<p>策略已收敛!</p>`;
+            }
           } else {
-            html += `<p>价值迭代次数: ${iterations}</p>`;
+            html += `<p>价值迭代次数: ${iterations.iterationCount}</p>`;
+            html += `<p>最大误差: ${iterations.maxDelta?.toFixed(5) || 'N/A'}</p>`;
+            if (iterations.isComplete) {
+              html += `<p>价值已收敛!</p>`;
+            }
           }
           
           resultsDiv.innerHTML = html;
         }
         
+        // 全局算法实例
+        let policyAgent = null;
+        let valueAgent = null;
+        
         // 绑定按钮事件
         document.getElementById('policyIterationBtn').addEventListener('click', function() {
-          const policyAgent = new PolicyIteration(env);
+          policyAgent = new PolicyIteration(env);
           const iterations = policyAgent.policyIteration();
           updateValueGrid(policyAgent, 'policyIterationValueGrid');
           updatePolicyGrid(policyAgent, 'policyIterationPolicyGrid');
@@ -708,10 +794,45 @@
         });
         
         document.getElementById('valueIterationBtn').addEventListener('click', function() {
-          const valueAgent = new ValueIteration(env);
+          valueAgent = new ValueIteration(env);
           const iterations = valueAgent.valueIteration();
           updateValueGrid(valueAgent, 'valueIterationValueGrid');
           updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
+          showResults('价值迭代', valueAgent, {iterationCount: iterations});
+        });
+        
+        document.getElementById('singleStepPolicyBtn').addEventListener('click', function() {
+          // 如果没有实例，创建一个新的
+          if (!policyAgent) {
+            policyAgent = new PolicyIteration(env);
+          }
+          
+          // 运行一步迭代
+          const iterations = policyAgent.singleStepIteration();
+          
+          // 更新视图
+          updateValueGrid(policyAgent, 'policyIterationValueGrid');
+          updatePolicyGrid(policyAgent, 'policyIterationPolicyGrid');
+          showResults('策略迭代', policyAgent, iterations);
+        });
+        
+        document.getElementById('singleStepValueBtn').addEventListener('click', function() {
+          // 如果没有实例，创建一个新的
+          if (!valueAgent) {
+            valueAgent = new ValueIteration(env);
+          }
+          
+          // 运行一步迭代
+          const iterations = valueAgent.singleStepIteration();
+          
+          // 更新视图
+          updateValueGrid(valueAgent, 'valueIterationValueGrid');
+          
+          // 如果完成了，更新策略
+          if (iterations.isComplete) {
+            updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
+          }
+          
           showResults('价值迭代', valueAgent, iterations);
         });
         
