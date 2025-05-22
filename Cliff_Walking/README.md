@@ -6,21 +6,14 @@
 
 ## 环境需求
 
-- Python 3.6+
-- NumPy
-
-## 安装依赖
-
-```bash
-pip install numpy
-```
+- JavaScript运行环境（Node.js）
 
 ## 运行方法
 
-直接运行 `cliff_walking_dp.py` 文件：
+直接运行 `cliff_walking.js` 文件：
 
 ```bash
-python cliff_walking_dp.py
+node cliff_walking.js
 ```
 
 程序会执行两种动态规划算法（策略迭代和价值迭代），并分别输出它们的结果。
@@ -32,7 +25,7 @@ python cliff_walking_dp.py
 1. `CliffWalkingEnv`：实现悬崖漫步环境，定义状态转移和奖励函数
 2. `PolicyIteration`：实现策略迭代算法
 3. `ValueIteration`：实现价值迭代算法
-4. 辅助函数 `print_agent`：用于可视化输出状态价值和最优策略
+4. 辅助函数 `printAgent`：用于可视化输出状态价值和最优策略
 
 ## 结果解读
 
@@ -64,3 +57,13 @@ python cliff_walking_dp.py
 - 掉入悬崖奖励为-100
 - 到达目标会结束当前回合
 - 掉入悬崖会结束当前回合并回到起点 
+
+## 算法实现
+
+本项目使用JavaScript实现了两种动态规划算法：
+
+1. **策略迭代算法**：先进行策略评估（使用贝尔曼期望方程），再进行策略提升，不断迭代直到策略稳定。
+
+2. **价值迭代算法**：直接使用贝尔曼最优方程来进行动态规划，得到最优状态价值，然后提取最优策略。
+
+算法实现逻辑参考了"动手学强化学习"教程。 
