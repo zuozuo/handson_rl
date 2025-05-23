@@ -414,6 +414,13 @@
                 this.update_magnitudes = []; // 记录每次更新的幅度
                 this.td_errors = []; // 记录TD误差
                 this.target_state = 36; // 监控起始状态的Q值变化
+                
+                // 最优策略追踪
+                this.optimal_policy_found = false;
+                this.optimal_policy_episode = -1;
+                this.recent_rewards = []; // 记录最近的奖励用于判断是否达到最优
+                this.stable_episodes_needed = 10; // 需要连续稳定的回合数
+                this.sarsa_optimal_reward = -15; // Sarsa的最优奖励（安全路径）
             }
 
             takeAction(state) {
@@ -465,12 +472,35 @@
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
                 
+                // 检查是否达到最优策略
+                this.checkOptimalPolicy(episode_return);
+                
                 // 每回合结束时记录当前Q值
                 if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
                     this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
                 }
                 
                 return episode_return;
+            }
+            
+            checkOptimalPolicy(episode_return) {
+                if (this.optimal_policy_found) return;
+                
+                this.recent_rewards.push(episode_return);
+                
+                // 保持最近的奖励记录不超过需要的稳定回合数
+                if (this.recent_rewards.length > this.stable_episodes_needed) {
+                    this.recent_rewards.shift();
+                }
+                
+                // 如果有足够的记录，检查是否所有最近的奖励都达到最优
+                if (this.recent_rewards.length === this.stable_episodes_needed) {
+                    const all_optimal = this.recent_rewards.every(reward => reward >= this.sarsa_optimal_reward);
+                    if (all_optimal) {
+                        this.optimal_policy_found = true;
+                        this.optimal_policy_episode = this.episode_count - this.stable_episodes_needed + 1;
+                    }
+                }
             }
 
             getStateValues() {
@@ -497,6 +527,13 @@
                 this.update_magnitudes = [];
                 this.td_errors = [];
                 this.target_state = 36;
+                
+                // 最优策略追踪
+                this.optimal_policy_found = false;
+                this.optimal_policy_episode = -1;
+                this.recent_rewards = [];
+                this.stable_episodes_needed = 10;
+                this.qlearning_optimal_reward = -13; // Q-learning的最优奖励（沿悬崖边缘）
             }
 
             takeAction(state) {
@@ -546,12 +583,33 @@
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
                 
+                // 检查是否达到最优策略
+                this.checkOptimalPolicy(episode_return);
+                
                 // 每回合结束时记录当前Q值
                 if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
                     this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
                 }
                 
                 return episode_return;
+            }
+            
+            checkOptimalPolicy(episode_return) {
+                if (this.optimal_policy_found) return;
+                
+                this.recent_rewards.push(episode_return);
+                
+                if (this.recent_rewards.length > this.stable_episodes_needed) {
+                    this.recent_rewards.shift();
+                }
+                
+                if (this.recent_rewards.length === this.stable_episodes_needed) {
+                    const all_optimal = this.recent_rewards.every(reward => reward >= this.qlearning_optimal_reward);
+                    if (all_optimal) {
+                        this.optimal_policy_found = true;
+                        this.optimal_policy_episode = this.episode_count - this.stable_episodes_needed + 1;
+                    }
+                }
             }
 
             getStateValues() {
@@ -593,6 +651,13 @@
                 this.update_magnitudes = [];
                 this.td_errors = [];
                 this.target_state = 36;
+                
+                // 最优策略追踪
+                this.optimal_policy_found = false;
+                this.optimal_policy_episode = -1;
+                this.recent_rewards = [];
+                this.stable_episodes_needed = 10;
+                this.sarsa_optimal_reward = -15;
             }
 
             takeAction(state) {
@@ -658,12 +723,33 @@
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
                 
+                // 检查是否达到最优策略
+                this.checkOptimalPolicy(episode_return);
+                
                 // 每回合结束时记录当前Q值
                 if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
                     this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
                 }
                 
                 return episode_return;
+            }
+            
+            checkOptimalPolicy(episode_return) {
+                if (this.optimal_policy_found) return;
+                
+                this.recent_rewards.push(episode_return);
+                
+                if (this.recent_rewards.length > this.stable_episodes_needed) {
+                    this.recent_rewards.shift();
+                }
+                
+                if (this.recent_rewards.length === this.stable_episodes_needed) {
+                    const all_optimal = this.recent_rewards.every(reward => reward >= this.sarsa_optimal_reward);
+                    if (all_optimal) {
+                        this.optimal_policy_found = true;
+                        this.optimal_policy_episode = this.episode_count - this.stable_episodes_needed + 1;
+                    }
+                }
             }
 
             getStateValues() {
@@ -705,6 +791,13 @@
                 this.update_magnitudes = [];
                 this.td_errors = [];
                 this.target_state = 36;
+                
+                // 最优策略追踪
+                this.optimal_policy_found = false;
+                this.optimal_policy_episode = -1;
+                this.recent_rewards = [];
+                this.stable_episodes_needed = 10;
+                this.qlearning_optimal_reward = -13;
             }
 
             takeAction(state) {
@@ -768,12 +861,33 @@
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
                 
+                // 检查是否达到最优策略
+                this.checkOptimalPolicy(episode_return);
+                
                 // 每回合结束时记录当前Q值
                 if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
                     this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
                 }
                 
                 return episode_return;
+            }
+            
+            checkOptimalPolicy(episode_return) {
+                if (this.optimal_policy_found) return;
+                
+                this.recent_rewards.push(episode_return);
+                
+                if (this.recent_rewards.length > this.stable_episodes_needed) {
+                    this.recent_rewards.shift();
+                }
+                
+                if (this.recent_rewards.length === this.stable_episodes_needed) {
+                    const all_optimal = this.recent_rewards.every(reward => reward >= this.qlearning_optimal_reward);
+                    if (all_optimal) {
+                        this.optimal_policy_found = true;
+                        this.optimal_policy_episode = this.episode_count - this.stable_episodes_needed + 1;
+                    }
+                }
             }
 
             getStateValues() {
@@ -1503,8 +1617,12 @@
             const avgReward = agent.episode_count > 0 ? (agent.total_reward / agent.episode_count).toFixed(2) : '0.00';
             const lastReward = agent.episode_rewards.length > 0 ? agent.episode_rewards[agent.episode_rewards.length - 1] : 0;
             
+            const optimalPolicyText = agent.optimal_policy_found 
+                ? `第${agent.optimal_policy_episode}回合` 
+                : '未达到';
+            
             resultsDiv.innerHTML = `
-                <p>训练回合: ${agent.episode_count} | 最后回合奖励: ${lastReward} | 平均奖励: ${avgReward}</p>
+                <p>训练回合: ${agent.episode_count} | 最后回合奖励: ${lastReward} | 平均奖励: ${avgReward} | 最优策略: ${optimalPolicyText}</p>
             `;
         }
 
@@ -1518,8 +1636,12 @@
             const avgReward = agent.episode_count > 0 ? (agent.total_reward / agent.episode_count).toFixed(2) : '0.00';
             const lastReward = agent.episode_rewards.length > 0 ? agent.episode_rewards[agent.episode_rewards.length - 1] : 0;
             
+            const optimalPolicyText = agent.optimal_policy_found 
+                ? `第${agent.optimal_policy_episode}回合` 
+                : '未达到';
+            
             resultsDiv.innerHTML = `
-                <p>训练回合: ${agent.episode_count} | 最后回合奖励: ${lastReward} | 平均奖励: ${avgReward}</p>
+                <p>训练回合: ${agent.episode_count} | 最后回合奖励: ${lastReward} | 平均奖励: ${avgReward} | 最优策略: ${optimalPolicyText}</p>
             `;
             
             paramsDiv.innerHTML = `
@@ -1604,6 +1726,16 @@
             agent.episode_count = 0;
             agent.total_reward = 0;
             agent.episode_rewards = [];
+            
+            // 重置最优策略追踪
+            agent.optimal_policy_found = false;
+            agent.optimal_policy_episode = -1;
+            agent.recent_rewards = [];
+            
+            // 重置详细统计数据
+            agent.q_value_history = [];
+            agent.update_magnitudes = [];
+            agent.td_errors = [];
             
             // 如果是改进算法，还需要重置参数历史
             if (algorithmName.includes('Improved')) {
