@@ -33,22 +33,37 @@
         .grid-wrapper {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 20px;
             flex-wrap: nowrap;
-            margin: 20px auto;
+            margin: 15px auto;
+        }
+        .grid-section {
+            flex: 1;
+            text-align: center;
+            max-width: 500px;
+        }
+        .grid-section h3 {
+            margin: 0 0 15px 0;
+            color: #555;
+            font-size: 16px;
+            font-weight: bold;
         }
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 40px);
             grid-template-rows: repeat(4, 40px);
-            gap: 2px;
-            margin: 20px auto;
+            gap: 1px;
+            margin: 0 auto;
             justify-content: center;
+            border: 2px solid #333;
+            border-radius: 4px;
+            padding: 2px;
+            background-color: #333;
         }
         .cell {
             width: 40px;
             height: 40px;
-            border: 1px solid #ccc;
+            border: none;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -56,7 +71,21 @@
             position: relative;
             background-color: #fff;
             font-weight: bold;
-            padding: 2px;
+            padding: 1px;
+            font-size: 10px;
+            text-align: center;
+        }
+        .policy-arrow {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        .state-value {
+            font-size: 8px;
+            color: #666;
+            line-height: 1;
+            font-weight: normal;
         }
         .start {
             background-color: #a8e6cf;
@@ -155,58 +184,6 @@
             font-size: 18px;
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
-        }
-        .grid-wrapper {
-            display: flex;
-            justify-content: space-around;
-            gap: 20px;
-            flex-wrap: nowrap;
-            margin: 15px auto;
-        }
-        .grid-section {
-            flex: 1;
-            text-align: center;
-        }
-        .grid-section h3 {
-            margin: 0 0 10px 0;
-            color: #555;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(12, 35px);
-            grid-template-rows: repeat(4, 35px);
-            gap: 1px;
-            margin: 0 auto;
-            justify-content: center;
-            border: 2px solid #333;
-            border-radius: 4px;
-            padding: 2px;
-            background-color: #333;
-        }
-        .cell {
-            width: 35px;
-            height: 35px;
-            border: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background-color: #fff;
-            font-weight: bold;
-            padding: 1px;
-            font-size: 11px;
-        }
-        .results {
-            margin: 10px 0;
-            font-size: 12px;
-            text-align: center;
-            background-color: #f0f8ff;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
         }
         .global-controls {
             margin: 20px 0;
@@ -337,12 +314,8 @@
                 <div id="sarsaResults" class="results"></div>
                 <div class="grid-wrapper">
                     <div class="grid-section">
-                        <h3>策略</h3>
-                        <div class="grid-container" id="sarsaPolicyGrid"></div>
-                    </div>
-                    <div class="grid-section">
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="sarsaValueGrid"></div>
+                        <h3>策略 & 状态价值</h3>
+                        <div class="grid-container" id="sarsaGrid"></div>
                     </div>
                 </div>
             </div>
@@ -352,12 +325,8 @@
                 <div id="qlearningResults" class="results"></div>
                 <div class="grid-wrapper">
                     <div class="grid-section">
-                        <h3>策略</h3>
-                        <div class="grid-container" id="qlearningPolicyGrid"></div>
-                    </div>
-                    <div class="grid-section">
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="qlearningValueGrid"></div>
+                        <h3>策略 & 状态价值</h3>
+                        <div class="grid-container" id="qlearningGrid"></div>
                     </div>
                 </div>
             </div>
@@ -786,31 +755,8 @@
             }
         }
 
-        // 更新策略网格
-        function updatePolicyGrid(agent, gridId) {
-            const cells = document.querySelectorAll(`#${gridId} .cell`);
-            
-            for (let i = 0; i < env.nrow; i++) {
-                for (let j = 0; j < env.ncol; j++) {
-                    const state = i * env.ncol + j;
-                    const cell = cells[state];
-                    
-                    if (state === startPos) {
-                        cell.innerHTML = 'S';
-                    } else if (state === goalPos[0]) {
-                        cell.innerHTML = 'G';
-                    } else if (cliffPos.includes(state)) {
-                        cell.innerHTML = 'C';
-                    } else {
-                        const best_a = agent.bestAction(state);
-                        cell.innerHTML = actionMeaning[best_a];
-                    }
-                }
-            }
-        }
-
-        // 更新状态价值网格
-        function updateValueGrid(agent, gridId) {
+        // 更新合并网格（同时显示策略和状态值）
+        function updateCombinedGrid(agent, gridId) {
             const cells = document.querySelectorAll(`#${gridId} .cell`);
             const stateValues = agent.getStateValues();
             
@@ -821,16 +767,40 @@
                     const stateValue = stateValues[state].toFixed(2);
                     
                     if (state === startPos) {
-                        cell.innerHTML = `S<br><span class="value-text">${stateValue}</span>`;
+                        cell.innerHTML = `
+                            <div class="policy-arrow">S</div>
+                            <div class="state-value">${stateValue}</div>
+                        `;
                     } else if (state === goalPos[0]) {
-                        cell.innerHTML = `G<br><span class="value-text">${stateValue}</span>`;
+                        cell.innerHTML = `
+                            <div class="policy-arrow">G</div>
+                            <div class="state-value">${stateValue}</div>
+                        `;
                     } else if (cliffPos.includes(state)) {
-                        cell.innerHTML = `C<br><span class="value-text">${stateValue}</span>`;
+                        cell.innerHTML = `
+                            <div class="policy-arrow">C</div>
+                            <div class="state-value">${stateValue}</div>
+                        `;
                     } else {
-                        cell.innerHTML = `<span class="value-text">${stateValue}</span>`;
+                        const best_a = agent.bestAction(state);
+                        const arrow = actionMeaning[best_a];
+                        cell.innerHTML = `
+                            <div class="policy-arrow">${arrow}</div>
+                            <div class="state-value">${stateValue}</div>
+                        `;
                     }
                 }
             }
+        }
+
+        // 更新策略网格（保留用于兼容性）
+        function updatePolicyGrid(agent, gridId) {
+            updateCombinedGrid(agent, gridId);
+        }
+
+        // 更新状态价值网格（保留用于兼容性）
+        function updateValueGrid(agent, gridId) {
+            // 空函数，因为合并网格已经处理了状态值
         }
 
         // 显示结果
@@ -848,16 +818,12 @@
 
         // 初始化所有网格
         function initializeGrids() {
-            createGrid('sarsaPolicyGrid');
-            createGrid('sarsaValueGrid');
-            createGrid('qlearningPolicyGrid');
-            createGrid('qlearningValueGrid');
+            createGrid('sarsaGrid');
+            createGrid('qlearningGrid');
             
             // 显示初始状态
-            updatePolicyGrid(sarsaAgent, 'sarsaPolicyGrid');
-            updateValueGrid(sarsaAgent, 'sarsaValueGrid');
-            updatePolicyGrid(qlearningAgent, 'qlearningPolicyGrid');
-            updateValueGrid(qlearningAgent, 'qlearningValueGrid');
+            updateCombinedGrid(sarsaAgent, 'sarsaGrid');
+            updateCombinedGrid(qlearningAgent, 'qlearningGrid');
             
             showResults('Sarsa', sarsaAgent);
             showResults('Q-learning', qlearningAgent);
@@ -870,9 +836,8 @@
                 agent.trainEpisode(env_copy);
             }
             
-            const gridPrefix = algorithmName === 'Sarsa' ? 'sarsa' : 'qlearning';
-            updatePolicyGrid(agent, `${gridPrefix}PolicyGrid`);
-            updateValueGrid(agent, `${gridPrefix}ValueGrid`);
+            const gridId = algorithmName === 'Sarsa' ? 'sarsaGrid' : 'qlearningGrid';
+            updateCombinedGrid(agent, gridId);
             showResults(algorithmName, agent);
             
             // 更新图表和统计信息
@@ -887,9 +852,8 @@
             agent.total_reward = 0;
             agent.episode_rewards = [];
             
-            const gridPrefix = algorithmName === 'Sarsa' ? 'sarsa' : 'qlearning';
-            updatePolicyGrid(agent, `${gridPrefix}PolicyGrid`);
-            updateValueGrid(agent, `${gridPrefix}ValueGrid`);
+            const gridId = algorithmName === 'Sarsa' ? 'sarsaGrid' : 'qlearningGrid';
+            updateCombinedGrid(agent, gridId);
             showResults(algorithmName, agent);
             
             // 更新图表和统计信息
