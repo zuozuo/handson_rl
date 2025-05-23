@@ -104,12 +104,12 @@ def plot_convergence_comparison():
     
     # 子图1：Q值收敛过程
     plt.subplot(2, 3, 1)
-    plt.plot(data['q_fixed'], label='固定学习率 (α=0.1)', alpha=0.7)
-    plt.plot(data['q_decay'], label='衰减学习率', alpha=0.7)
-    plt.axhline(y=data['true_value'], color='red', linestyle='--', label='真实Q值')
+    plt.plot(data['q_fixed'], label='Fixed LR (alpha=0.1)', alpha=0.7)
+    plt.plot(data['q_decay'], label='Decaying LR', alpha=0.7)
+    plt.axhline(y=data['true_value'], color='red', linestyle='--', label='True Q Value')
     plt.xlabel('Episodes')
     plt.ylabel('Q Value')
-    plt.title('Q值收敛过程对比')
+    plt.title('Q Value Convergence Comparison')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
@@ -117,23 +117,23 @@ def plot_convergence_comparison():
     plt.subplot(2, 3, 2)
     start_idx = len(data['q_fixed']) - 200
     plt.plot(range(start_idx, len(data['q_fixed'])), 
-             data['q_fixed'][start_idx:], label='固定学习率', alpha=0.7)
+             data['q_fixed'][start_idx:], label='Fixed LR', alpha=0.7)
     plt.plot(range(start_idx, len(data['q_decay'])), 
-             data['q_decay'][start_idx:], label='衰减学习率', alpha=0.7)
-    plt.axhline(y=data['true_value'], color='red', linestyle='--', label='真实Q值')
+             data['q_decay'][start_idx:], label='Decaying LR', alpha=0.7)
+    plt.axhline(y=data['true_value'], color='red', linestyle='--', label='True Q Value')
     plt.xlabel('Episodes')
     plt.ylabel('Q Value')
-    plt.title('后期收敛细节')
+    plt.title('Late-stage Convergence Detail')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
     # 子图3：学习率衰减过程
     plt.subplot(2, 3, 3)
-    plt.plot(data['alpha_history'], label='衰减学习率')
-    plt.axhline(y=0.1, color='red', linestyle='--', label='固定学习率')
+    plt.plot(data['alpha_history'], label='Decaying LR')
+    plt.axhline(y=0.1, color='red', linestyle='--', label='Fixed LR')
     plt.xlabel('Episodes')
     plt.ylabel('Learning Rate')
-    plt.title('学习率变化过程')
+    plt.title('Learning Rate Decay Process')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
@@ -143,11 +143,11 @@ def plot_convergence_comparison():
     td_smooth_fixed = np.convolve(data['td_errors_fixed'], np.ones(window)/window, mode='valid')
     td_smooth_decay = np.convolve(data['td_errors_decay'], np.ones(window)/window, mode='valid')
     
-    plt.plot(td_smooth_fixed, label='固定学习率', alpha=0.7)
-    plt.plot(td_smooth_decay, label='衰减学习率', alpha=0.7)
+    plt.plot(td_smooth_fixed, label='Fixed LR', alpha=0.7)
+    plt.plot(td_smooth_decay, label='Decaying LR', alpha=0.7)
     plt.xlabel('Episodes')
     plt.ylabel('Average |TD Error|')
-    plt.title('TD误差幅度对比（移动平均）')
+    plt.title('TD Error Magnitude Comparison')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
@@ -159,11 +159,11 @@ def plot_convergence_comparison():
     std_decay = [np.std(data['q_decay'][max(0, i-window):i+1]) 
                  for i in range(len(data['q_decay']))]
     
-    plt.plot(std_fixed, label='固定学习率', alpha=0.7)
-    plt.plot(std_decay, label='衰减学习率', alpha=0.7)
+    plt.plot(std_fixed, label='Fixed LR', alpha=0.7)
+    plt.plot(std_decay, label='Decaying LR', alpha=0.7)
     plt.xlabel('Episodes')
     plt.ylabel('Q Value Std Dev')
-    plt.title('Q值稳定性对比（标准差）')
+    plt.title('Q Value Stability Comparison')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
@@ -178,11 +178,11 @@ def plot_convergence_comparison():
     updates_smooth_fixed = np.convolve(updates_fixed, np.ones(window)/window, mode='valid')
     updates_smooth_decay = np.convolve(updates_decay, np.ones(window)/window, mode='valid')
     
-    plt.plot(updates_smooth_fixed, label='固定学习率', alpha=0.7)
-    plt.plot(updates_smooth_decay, label='衰减学习率', alpha=0.7)
+    plt.plot(updates_smooth_fixed, label='Fixed LR', alpha=0.7)
+    plt.plot(updates_smooth_decay, label='Decaying LR', alpha=0.7)
     plt.xlabel('Episodes')
     plt.ylabel('Average Update Magnitude')
-    plt.title('Q值更新幅度对比')
+    plt.title('Q Value Update Magnitude Comparison')
     plt.legend()
     plt.grid(True, alpha=0.3)
     
