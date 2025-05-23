@@ -5,339 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>时序差分算法可视化</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(222.2 84% 4.9%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(0 84.2% 60.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(0 0% 100%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-        }
-        .container {
-            max-width: 1800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .algorithm-container {
-            margin: 30px 0;
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        .grid-wrapper {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: nowrap;
-            margin: 15px auto;
-            flex-direction: column;
-            align-items: center;
-        }
-        .grid-section {
-            flex: none;
-            text-align: center;
-            max-width: 500px;
-            margin-bottom: 15px;
-        }
-        .grid-section h3 {
-            margin: 0 0 15px 0;
-            color: #555;
-            font-size: 16px;
-            font-weight: bold;
+        :root {
+            --radius: 0.5rem;
         }
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 35px);
             grid-template-rows: repeat(4, 35px);
             gap: 1px;
-            margin: 0 auto;
-            justify-content: center;
-            border: 2px solid #333;
-            border-radius: 4px;
-            padding: 2px;
-            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid hsl(214.3 31.8% 91.4%);
         }
         .cell {
             width: 35px;
             height: 35px;
-            border: none;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            background-color: #fff;
-            font-weight: bold;
-            padding: 1px;
+            font-weight: 600;
             font-size: 10px;
-            text-align: center;
+            background-color: white;
+            border-right: 1px solid hsl(214.3 31.8% 91.4%);
+            border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
         }
-        .policy-arrow {
-            font-size: 14px;
-            font-weight: bold;
-            line-height: 1;
-            margin-bottom: 2px;
+        .cell:nth-child(12n) {
+            border-right: none;
         }
-        .state-value {
-            font-size: 8px;
-            color: #666;
-            line-height: 1;
-            font-weight: normal;
+        .cell:nth-last-child(-n+12) {
+            border-bottom: none;
         }
         .start {
-            background-color: #a8e6cf;
+            background-color: hsl(142.1 76.2% 36.3%);
+            color: white;
         }
         .goal {
-            background-color: #dcedc1;
+            background-color: hsl(47.9 95.8% 53.1%);
+            color: hsl(222.2 84% 4.9%);
         }
         .cliff {
-            background-color: #ff8b94;
-        }
-        .q-value {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: 10px;
-            color: #666;
+            background-color: hsl(0 84.2% 60.2%);
+            color: white;
         }
         .value-text {
-            font-weight: normal;
-            font-size: 10px;
-            color: #555;
+            font-weight: 400;
+            font-size: 8px;
+            color: hsl(215.4 16.3% 46.9%);
             margin-top: 2px;
-        }
-        .legend {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0 10px;
-        }
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-            border: 1px solid #ccc;
-        }
-        .controls {
-            margin: 20px 0;
-        }
-        button {
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .reset-btn {
-            background-color: #f44336;
-        }
-        .reset-btn:hover {
-            background-color: #d32f2f;
-        }
-        .step-btn {
-            background-color: #2196F3;
-        }
-        .step-btn:hover {
-            background-color: #1976D2;
-        }
-        .results {
-            margin: 10px 0;
-            font-size: 14px;
-        }
-        .comparison-container {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            margin: 20px 0;
-            justify-content: center;
-        }
-        .algorithm-section {
-            flex: 1;
-            max-width: 600px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            background-color: #fafafa;
-        }
-        .algorithm-section h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #333;
-            text-align: center;
-            font-size: 18px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        .global-controls {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #e8f4fd;
-            border-radius: 8px;
-        }
-        .charts-section {
-            margin: 30px 0;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .charts-container {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        .chart-wrapper {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            width: 100%;
-            max-width: 1200px;
-        }
-        .chart-wrapper h3 {
-            margin-top: 0;
-            color: #333;
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-        .single-chart {
-            grid-column: 1 / -1;
-        }
-        canvas {
-            height: 500px !important;
-        }
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            background-color: #f0f8ff;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2196F3;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>时序差分算法可视化与学习曲线分析</h1>
+<body class="min-h-screen bg-slate-50">
+    <div class="container mx-auto px-6 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold tracking-tight text-gray-900 mb-4">
+                时序差分算法可视化与学习曲线分析
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                通过交互式可视化深入理解 Sarsa 和 Q-learning 算法的学习过程
+            </p>
+        </div>
         
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color start"></div>
-                <span>起点</span>
+        <!-- Legend -->
+        <div class="flex justify-center items-center gap-6 mb-8 p-4 bg-card rounded-lg border shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded bg-green-600"></div>
+                <span class="text-sm font-medium">起点</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-color goal"></div>
-                <span>终点</span>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded bg-yellow-400"></div>
+                <span class="text-sm font-medium">终点</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-color cliff"></div>
-                <span>悬崖</span>
-            </div>
-        </div>
-
-        <div class="global-controls">
-            <h3>全局控制</h3>
-            <button id="trainBothBtn">同时训练两个算法</button>
-            <button id="stepBothBtn" class="step-btn">同时单步训练</button>
-            <button id="resetBothBtn" class="reset-btn">重置所有算法</button>
-            <button id="clearChartsBtn" class="reset-btn">清空图表</button>
-            <div style="margin-top: 10px;">
-                训练回合数: <input type="number" id="episodesInput" value="100" min="1" max="1000" style="width: 80px;">
-                移动平均窗口: <input type="number" id="smoothingWindow" value="20" min="5" max="100" style="width: 80px;">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded bg-red-500"></div>
+                <span class="text-sm font-medium">悬崖</span>
             </div>
         </div>
 
-        <!-- 统计信息 -->
-        <div class="stats-container">
-            <div class="stat-item">
-                <div class="stat-value" id="sarsaEpisodes">0</div>
-                <div class="stat-label">Sarsa 训练回合</div>
+        <!-- Global Controls -->
+        <div class="bg-card rounded-lg border shadow-sm p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4">全局控制</h3>
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <button id="trainBothBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    同时训练两个算法
+                </button>
+                <button id="stepBothBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    同时单步训练
+                </button>
+                <button id="resetBothBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2">
+                    重置所有算法
+                </button>
+                <button id="clearChartsBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    清空图表
+                </button>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="qlearningEpisodes">0</div>
-                <div class="stat-label">Q-learning 训练回合</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="sarsaAvgReward">0.00</div>
-                <div class="stat-label">Sarsa 平均奖励</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="qlearningAvgReward">0.00</div>
-                <div class="stat-label">Q-learning 平均奖励</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">训练回合数</label>
+                    <input type="number" id="episodesInput" value="100" min="1" max="1000" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">移动平均窗口</label>
+                    <input type="number" id="smoothingWindow" value="20" min="5" max="100" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
             </div>
         </div>
 
-        <!-- 学习曲线图表 -->
-        <div class="charts-section">
-            <h2>学习曲线分析</h2>
-            <div class="charts-container">
-                <div class="chart-wrapper single-chart">
-                    <h3>Sarsa vs Q-learning 综合学习曲线对比</h3>
-                    <canvas id="combinedChart"></canvas>
+        <!-- Statistics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-card rounded-lg border shadow-sm p-6">
+                <div class="text-2xl font-bold text-blue-600" id="sarsaEpisodes">0</div>
+                <p class="text-xs text-muted-foreground">Sarsa 训练回合</p>
+            </div>
+            <div class="bg-card rounded-lg border shadow-sm p-6">
+                <div class="text-2xl font-bold text-green-600" id="qlearningEpisodes">0</div>
+                <p class="text-xs text-muted-foreground">Q-learning 训练回合</p>
+            </div>
+            <div class="bg-card rounded-lg border shadow-sm p-6">
+                <div class="text-2xl font-bold text-blue-600" id="sarsaAvgReward">0.00</div>
+                <p class="text-xs text-muted-foreground">Sarsa 平均奖励</p>
+            </div>
+            <div class="bg-card rounded-lg border shadow-sm p-6">
+                <div class="text-2xl font-bold text-green-600" id="qlearningAvgReward">0.00</div>
+                <p class="text-xs text-muted-foreground">Q-learning 平均奖励</p>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="bg-card rounded-lg border shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-6">学习曲线分析</h2>
+            <div class="bg-background rounded-lg border p-4">
+                <h3 class="text-lg font-medium text-center mb-4">Sarsa vs Q-learning 综合学习曲线对比</h3>
+                <div class="relative h-96">
+                    <canvas id="combinedChart" class="w-full h-full"></canvas>
                 </div>
             </div>
         </div>
         
-        <div class="comparison-container">
-            <div class="algorithm-section">
-                <h2>Sarsa算法 (在线策略)</h2>
-                <div id="sarsaResults" class="results"></div>
-                <div class="grid-wrapper">
-                    <div class="grid-section">
-                        <h3>策略</h3>
-                        <div class="grid-container" id="sarsaPolicyGrid"></div>
+        <!-- Algorithms Comparison -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Sarsa Algorithm -->
+            <div class="bg-card rounded-lg border shadow-sm">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-semibold text-blue-700">Sarsa算法 (在线策略)</h2>
+                    <div id="sarsaResults" class="mt-2 text-sm text-muted-foreground"></div>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium mb-4">策略</h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="sarsaPolicyGrid"></div>
+                        </div>
                     </div>
-                    <div class="grid-section">
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="sarsaValueGrid"></div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium mb-4">状态价值</h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="sarsaValueGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="algorithm-section">
-                <h2>Q-learning算法 (离线策略)</h2>
-                <div id="qlearningResults" class="results"></div>
-                <div class="grid-wrapper">
-                    <div class="grid-section">
-                        <h3>策略</h3>
-                        <div class="grid-container" id="qlearningPolicyGrid"></div>
+            <!-- Q-learning Algorithm -->
+            <div class="bg-card rounded-lg border shadow-sm">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-semibold text-green-700">Q-learning算法 (离线策略)</h2>
+                    <div id="qlearningResults" class="mt-2 text-sm text-muted-foreground"></div>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium mb-4">策略</h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="qlearningPolicyGrid"></div>
+                        </div>
                     </div>
-                    <div class="grid-section">
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="qlearningValueGrid"></div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium mb-4">状态价值</h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="qlearningValueGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -581,32 +475,32 @@
                     datasets: [{
                         label: 'Sarsa Episode Reward',
                         data: [],
-                        borderColor: 'rgba(54, 162, 235, 0.8)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         borderWidth: 1.5,
                         pointRadius: 0,
                         fill: false
                     }, {
                         label: 'Sarsa Moving Average',
                         data: [],
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 3,
                         pointRadius: 0,
                         fill: false
                     }, {
                         label: 'Q-learning Episode Reward',
                         data: [],
-                        borderColor: 'rgba(75, 192, 192, 0.9)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
                         borderWidth: 1.5,
                         pointRadius: 0,
                         fill: false
                     }, {
                         label: 'Q-learning Moving Average',
                         data: [],
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderColor: 'rgb(251, 146, 60)',
+                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
                         borderWidth: 3,
                         pointRadius: 0,
                         fill: false
@@ -622,11 +516,20 @@
                                 display: true,
                                 text: 'Return',
                                 font: {
-                                    size: 14
-                                }
+                                    size: 14,
+                                    family: 'Inter, ui-sans-serif, system-ui'
+                                },
+                                color: 'hsl(215.4 16.3% 46.9%)'
                             },
                             grid: {
-                                alpha: 0.3
+                                color: 'hsl(214.3 31.8% 91.4%)',
+                                borderColor: 'hsl(214.3 31.8% 91.4%)'
+                            },
+                            ticks: {
+                                color: 'hsl(215.4 16.3% 46.9%)',
+                                font: {
+                                    family: 'Inter, ui-sans-serif, system-ui'
+                                }
                             }
                         },
                         x: {
@@ -634,11 +537,20 @@
                                 display: true,
                                 text: 'Episodes',
                                 font: {
-                                    size: 14
-                                }
+                                    size: 14,
+                                    family: 'Inter, ui-sans-serif, system-ui'
+                                },
+                                color: 'hsl(215.4 16.3% 46.9%)'
                             },
                             grid: {
-                                alpha: 0.3
+                                color: 'hsl(214.3 31.8% 91.4%)',
+                                borderColor: 'hsl(214.3 31.8% 91.4%)'
+                            },
+                            ticks: {
+                                color: 'hsl(215.4 16.3% 46.9%)',
+                                font: {
+                                    family: 'Inter, ui-sans-serif, system-ui'
+                                }
                             }
                         }
                     },
@@ -650,18 +562,26 @@
                                 usePointStyle: true,
                                 padding: 20,
                                 font: {
-                                    size: 12
-                                }
+                                    size: 12,
+                                    family: 'Inter, ui-sans-serif, system-ui'
+                                },
+                                color: 'hsl(222.2 84% 4.9%)'
                             }
                         },
                         tooltip: {
                             mode: 'index',
                             intersect: false,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                            borderWidth: 1
+                            backgroundColor: 'hsl(222.2 47.4% 11.2%)',
+                            titleColor: 'hsl(210 40% 98%)',
+                            bodyColor: 'hsl(210 40% 98%)',
+                            borderColor: 'hsl(214.3 31.8% 91.4%)',
+                            borderWidth: 1,
+                            titleFont: {
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            },
+                            bodyFont: {
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            }
                         }
                     },
                     interaction: {
@@ -670,7 +590,7 @@
                         intersect: false
                     },
                     animation: {
-                        duration: 0
+                        duration: 200
                     }
                 }
             });
