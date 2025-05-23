@@ -281,11 +281,6 @@
                         <div class="grid-container" id="sarsaValueGrid"></div>
                     </div>
                 </div>
-                <div class="controls">
-                    <button id="trainSarsaBtn">训练Sarsa</button>
-                    <button id="stepSarsaBtn" class="step-btn">单步训练</button>
-                    <button id="resetSarsaBtn" class="reset-btn">重置Sarsa</button>
-                </div>
             </div>
 
             <div class="algorithm-section">
@@ -300,11 +295,6 @@
                         <h3>状态价值</h3>
                         <div class="grid-container" id="qlearningValueGrid"></div>
                     </div>
-                </div>
-                <div class="controls">
-                    <button id="trainQlearningBtn">训练Q-learning</button>
-                    <button id="stepQlearningBtn" class="step-btn">单步训练</button>
-                    <button id="resetQlearningBtn" class="reset-btn">重置Q-learning</button>
                 </div>
             </div>
         </div>
@@ -844,32 +834,6 @@
         }
 
         // 绑定事件监听器
-        document.getElementById('trainSarsaBtn').addEventListener('click', function() {
-            const episodes = parseInt(document.getElementById('episodesInput').value);
-            trainAgent(sarsaAgent, 'Sarsa', episodes);
-        });
-
-        document.getElementById('stepSarsaBtn').addEventListener('click', function() {
-            trainAgent(sarsaAgent, 'Sarsa', 1);
-        });
-
-        document.getElementById('resetSarsaBtn').addEventListener('click', function() {
-            resetAgent(sarsaAgent, 'Sarsa');
-        });
-
-        document.getElementById('trainQlearningBtn').addEventListener('click', function() {
-            const episodes = parseInt(document.getElementById('episodesInput').value);
-            trainAgent(qlearningAgent, 'Q-learning', episodes);
-        });
-
-        document.getElementById('stepQlearningBtn').addEventListener('click', function() {
-            trainAgent(qlearningAgent, 'Q-learning', 1);
-        });
-
-        document.getElementById('resetQlearningBtn').addEventListener('click', function() {
-            resetAgent(qlearningAgent, 'Q-learning');
-        });
-
         document.getElementById('trainBothBtn').addEventListener('click', function() {
             const episodes = parseInt(document.getElementById('episodesInput').value);
             trainAgent(sarsaAgent, 'Sarsa', episodes);
