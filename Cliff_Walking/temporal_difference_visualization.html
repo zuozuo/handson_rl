@@ -177,44 +177,6 @@
             </div>
         </div>
         
-        <!-- Learning Rate Analysis Section -->
-        <div class="bg-card rounded-lg border shadow-sm p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-6">学习率与收敛性深度分析</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Q值收敛过程对比 -->
-                <div class="bg-background rounded-lg border p-4">
-                    <h3 class="text-lg font-medium text-center mb-4">Q值收敛过程对比</h3>
-                    <div class="relative h-64">
-                        <canvas id="qValueChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                
-                <!-- 后期收敛细节 -->
-                <div class="bg-background rounded-lg border p-4">
-                    <h3 class="text-lg font-medium text-center mb-4">后期收敛细节 (最后100回合)</h3>
-                    <div class="relative h-64">
-                        <canvas id="lateStageChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                
-                <!-- 学习率衰减过程 -->
-                <div class="bg-background rounded-lg border p-4">
-                    <h3 class="text-lg font-medium text-center mb-4">学习率衰减过程</h3>
-                    <div class="relative h-64">
-                        <canvas id="learningRateChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                
-                <!-- 收敛稳定性指标 -->
-                <div class="bg-background rounded-lg border p-4">
-                    <h3 class="text-lg font-medium text-center mb-4">收敛稳定性指标</h3>
-                    <div class="relative h-64">
-                        <canvas id="stabilityChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Algorithms Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Sarsa Algorithm -->
@@ -309,6 +271,44 @@
                                 <div class="grid-container" id="improvedQlearningValueGrid"></div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Rate Analysis Section -->
+        <div class="bg-card rounded-lg border shadow-sm p-6 mb-8 mt-8">
+            <h2 class="text-xl font-semibold mb-6">学习率与收敛性深度分析</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Q值收敛过程对比 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">Q值收敛过程对比</h3>
+                    <div class="relative h-64">
+                        <canvas id="qValueChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 后期收敛细节 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">后期收敛细节 (最后100回合)</h3>
+                    <div class="relative h-64">
+                        <canvas id="lateStageChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 学习率衰减过程 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">学习率衰减过程</h3>
+                    <div class="relative h-64">
+                        <canvas id="learningRateChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 收敛稳定性指标 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">收敛稳定性指标</h3>
+                    <div class="relative h-64">
+                        <canvas id="stabilityChart" class="w-full h-full"></canvas>
                     </div>
                 </div>
             </div>
