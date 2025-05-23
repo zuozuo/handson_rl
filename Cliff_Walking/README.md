@@ -54,6 +54,21 @@ open cliff_walking_visualization.html
 
 ![悬崖漫步可视化界面](cliff_walking.jpg)
 
+### 时序差分算法可视化
+
+运行 `temporal_difference_visualization.html` 可以在浏览器中查看Sarsa和Q-learning算法的可视化对比界面：
+
+```bash
+open temporal_difference_visualization.html
+```
+
+时序差分可视化界面功能：
+- 同时显示Sarsa和Q-learning两种算法的训练结果
+- 支持单步训练和批量训练
+- 实时显示每个算法的策略和状态价值
+- 提供全局控制按钮同时操作两个算法
+- 显示训练统计信息（回合数、奖励等）
+
 ## 代码结构
 
 ### 动态规划算法（JavaScript）
@@ -145,4 +160,6 @@ open cliff_walking_visualization.html
 - 修复价值迭代单步运行时策略表格不更新的问题，现在每次价值更新后都会同步更新策略
 - 新增时序差分算法实现：Sarsa和Q-learning算法
 - 添加算法性能对比分析和可视化图表
-- 修复matplotlib中文字体显示问题，将图表标签改为英文以提高兼容性 
+- 修复matplotlib中文字体显示问题，将图表标签改为英文以提高兼容性
+- 创建时序差分算法可视化界面，支持Sarsa和Q-learning算法的实时对比展示
+- 实现单步训练、批量训练和重置功能，便于观察算法学习过程 
