@@ -55,6 +55,25 @@ python temporal_difference_algorithms_improved.py
 2. 固定学习率=0.1导致Q值持续大幅更新，无法精细收敛
 3. Sarsa作为在线策略算法，学习包含探索的策略价值，受探索行为影响
 
+#### 学习率影响深度分析
+
+运行 `learning_rate_analysis.py` 文件：
+
+```bash
+python learning_rate_analysis.py
+```
+
+学习率分析程序功能：
+- **数值分析**：展示固定学习率vs衰减学习率的10倍更新幅度差异
+- **收敛对比**：6个子图全面对比两种学习率策略的收敛过程
+- **稳定性指标**：通过标准差等指标量化评估策略稳定性
+- **可视化图表**：生成 `learning_rate_analysis.png` 展示详细分析结果
+
+**关键发现**：
+- 固定α=0.1将任何TD误差放大10倍，导致后期大幅振荡
+- 学习率衰减实现从粗调到精调的平滑过渡
+- 图表使用英文标签确保跨平台兼容性，避免中文字体乱码问题
+
 ## 可视化运行
 
 打开 `cliff_walking_visualization.html` 文件可以在浏览器中查看环境的可视化界面：
