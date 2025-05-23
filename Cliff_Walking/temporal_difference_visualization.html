@@ -100,6 +100,19 @@
             color: hsl(215.4 16.3% 46.9%);
             margin-top: 2px;
         }
+        
+        /* 禁用状态样式 */
+        button:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        
+        input:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            background-color: hsl(210 40% 96%);
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-slate-50">
@@ -1689,33 +1702,7 @@
                 agent.trainEpisode(env_copy);
             }
             
-            // 确定网格ID
-            let policyGridId, valueGridId;
-            if (algorithmName === 'Sarsa') {
-                policyGridId = 'sarsaPolicyGrid';
-                valueGridId = 'sarsaValueGrid';
-            } else if (algorithmName === 'Q-learning') {
-                policyGridId = 'qlearningPolicyGrid';
-                valueGridId = 'qlearningValueGrid';
-            } else if (algorithmName === 'Improved Sarsa') {
-                policyGridId = 'improvedSarsaPolicyGrid';
-                valueGridId = 'improvedSarsaValueGrid';
-            } else if (algorithmName === 'Improved Q-learning') {
-                policyGridId = 'improvedQlearningPolicyGrid';
-                valueGridId = 'improvedQlearningValueGrid';
-            }
-            
-            updatePolicyGrid(agent, policyGridId);
-            updateValueGrid(agent, valueGridId);
-            
-            // 显示结果
-            if (algorithmName.includes('Improved')) {
-                showImprovedResults(algorithmName, agent);
-            } else {
-                showResults(algorithmName, agent);
-            }
-            
-            // 更新图表
+            updateAgentDisplay(agent, algorithmName);
             updateCharts();
             updateStepsDisplay();
         }
@@ -1777,15 +1764,36 @@
         }
 
         // 绑定事件监听器
-        document.getElementById('trainBothBtn').addEventListener('click', function() {
+        document.getElementById('trainBothBtn').addEventListener('click', async function() {
             const episodes = parseInt(document.getElementById('episodesInput').value);
-            trainAgent(sarsaAgent, 'Sarsa', episodes);
-            trainAgent(qlearningAgent, 'Q-learning', episodes);
-            trainAgent(improvedSarsaAgent, 'Improved Sarsa', episodes);
-            trainAgent(improvedQlearningAgent, 'Improved Q-learning', episodes);
+            
+            // 禁用所有按钮和输入框
+            setButtonsEnabled(false);
+            
+            // 更新按钮文字显示训练状态
+            const trainBtn = document.getElementById('trainBothBtn');
+            const originalText = trainBtn.textContent;
+            trainBtn.textContent = '训练中...';
+            
+            try {
+                // 使用异步训练，避免UI阻塞
+                await Promise.all([
+                    trainAgentAsync(sarsaAgent, 'Sarsa', episodes),
+                    trainAgentAsync(qlearningAgent, 'Q-learning', episodes),
+                    trainAgentAsync(improvedSarsaAgent, 'Improved Sarsa', episodes),
+                    trainAgentAsync(improvedQlearningAgent, 'Improved Q-learning', episodes)
+                ]);
+            } catch (error) {
+                console.error('训练过程中出现错误:', error);
+            } finally {
+                // 恢复按钮状态
+                trainBtn.textContent = originalText;
+                setButtonsEnabled(true);
+            }
         });
 
         document.getElementById('stepBothBtn').addEventListener('click', function() {
+            // 单步训练不需要异步处理
             trainAgent(sarsaAgent, 'Sarsa', 1);
             trainAgent(qlearningAgent, 'Q-learning', 1);
             trainAgent(improvedSarsaAgent, 'Improved Sarsa', 1);
@@ -1793,6 +1801,9 @@
         });
 
         document.getElementById('resetBothBtn').addEventListener('click', function() {
+            // 重置时也禁用按钮，防止重复操作
+            setButtonsEnabled(false);
+            
             sarsaAgent = new Sarsa(env.ncol, env.nrow);
             qlearningAgent = new QLearning(env.ncol, env.nrow);
             improvedSarsaAgent = new ImprovedSarsa(env.ncol, env.nrow);
@@ -1800,6 +1811,9 @@
             initializeGrids();
             updateCharts();
             updateStepsDisplay();
+            
+            // 重新启用按钮
+            setButtonsEnabled(true);
         });
 
         document.getElementById('clearChartsBtn').addEventListener('click', function() {
@@ -1817,6 +1831,103 @@
             initializeGrids();
             updateStepsDisplay();
         });
+
+        // 异步训练函数，分批训练避免UI阻塞
+        async function trainAgentAsync(agent, algorithmName, episodes = 1, batchSize = 50) {
+            const batches = Math.ceil(episodes / batchSize);
+            
+            for (let batch = 0; batch < batches; batch++) {
+                const currentBatchSize = Math.min(batchSize, episodes - batch * batchSize);
+                
+                // 训练当前批次
+                for (let i = 0; i < currentBatchSize; i++) {
+                    const env_copy = new CliffWalkingEnv();
+                    agent.trainEpisode(env_copy);
+                }
+                
+                // 更新显示
+                updateAgentDisplay(agent, algorithmName);
+                updateCharts();
+                updateStepsDisplay();
+                
+                // 每批次后让出控制权，允许UI更新
+                if (batch < batches - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+        }
+
+        // 更新单个算法的显示
+        function updateAgentDisplay(agent, algorithmName) {
+            // 确定网格ID
+            let policyGridId, valueGridId;
+            if (algorithmName === 'Sarsa') {
+                policyGridId = 'sarsaPolicyGrid';
+                valueGridId = 'sarsaValueGrid';
+            } else if (algorithmName === 'Q-learning') {
+                policyGridId = 'qlearningPolicyGrid';
+                valueGridId = 'qlearningValueGrid';
+            } else if (algorithmName === 'Improved Sarsa') {
+                policyGridId = 'improvedSarsaPolicyGrid';
+                valueGridId = 'improvedSarsaValueGrid';
+            } else if (algorithmName === 'Improved Q-learning') {
+                policyGridId = 'improvedQlearningPolicyGrid';
+                valueGridId = 'improvedQlearningValueGrid';
+            }
+            
+            updatePolicyGrid(agent, policyGridId);
+            updateValueGrid(agent, valueGridId);
+            
+            // 显示结果
+            if (algorithmName.includes('Improved')) {
+                showImprovedResults(algorithmName, agent);
+            } else {
+                showResults(algorithmName, agent);
+            }
+        }
+
+        // 设置按钮状态
+        function setButtonsEnabled(enabled) {
+            const buttons = [
+                'trainBothBtn',
+                'stepBothBtn', 
+                'resetBothBtn',
+                'clearChartsBtn'
+            ];
+            
+            buttons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                button.disabled = !enabled;
+                
+                if (!enabled) {
+                    button.classList.add('opacity-50', 'cursor-not-allowed');
+                    button.classList.remove('hover:bg-primary/90', 'hover:bg-accent', 'hover:bg-destructive/90');
+                } else {
+                    button.classList.remove('opacity-50', 'cursor-not-allowed');
+                    // 根据按钮类型恢复hover效果
+                    if (buttonId === 'trainBothBtn') {
+                        button.classList.add('hover:bg-primary/90');
+                    } else if (buttonId === 'resetBothBtn') {
+                        button.classList.add('hover:bg-destructive/90');
+                    } else {
+                        button.classList.add('hover:bg-accent');
+                    }
+                }
+            });
+            
+            // 同时禁用/启用输入框
+            const inputs = ['episodesInput', 'smoothingWindow'];
+            inputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                input.disabled = !enabled;
+                
+                if (!enabled) {
+                    input.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    input.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
     </script>
 </body>
 </html> 
