@@ -160,24 +160,10 @@
             
             <!-- 迭代步数显示 -->
             <div class="mt-6 p-4 bg-slate-50 rounded-lg border">
-                <h4 class="text-sm font-semibold mb-3 text-gray-700">算法训练进度</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-blue-600" id="sarsaSteps">0</div>
-                        <div class="text-xs text-muted-foreground">原始Sarsa</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-green-600" id="qlearningSteps">0</div>
-                        <div class="text-xs text-muted-foreground">原始Q-learning</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-purple-600" id="improvedSarsaSteps">0</div>
-                        <div class="text-xs text-muted-foreground">改进Sarsa</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-orange-600" id="improvedQlearningSteps">0</div>
-                        <div class="text-xs text-muted-foreground">改进Q-learning</div>
-                    </div>
+                <h4 class="text-sm font-semibold mb-3 text-gray-700">训练进度</h4>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-700" id="trainingSteps">0</div>
+                    <div class="text-sm text-muted-foreground">已训练回合数</div>
                 </div>
             </div>
         </div>
@@ -1045,10 +1031,7 @@
 
         // 更新迭代步数显示
         function updateStepsDisplay() {
-            document.getElementById('sarsaSteps').textContent = sarsaAgent.episode_count;
-            document.getElementById('qlearningSteps').textContent = qlearningAgent.episode_count;
-            document.getElementById('improvedSarsaSteps').textContent = improvedSarsaAgent.episode_count;
-            document.getElementById('improvedQlearningSteps').textContent = improvedQlearningAgent.episode_count;
+            document.getElementById('trainingSteps').textContent = sarsaAgent.episode_count;
         }
 
         // 初始化所有网格
