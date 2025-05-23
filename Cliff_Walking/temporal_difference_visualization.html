@@ -159,6 +159,9 @@
                 <button id="clearChartsBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                     清空图表
                 </button>
+                <button id="recheckPolicyBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    重新检查最优策略
+                </button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-2">
@@ -433,7 +436,7 @@
                 this.optimal_policy_episode = -1;
                 this.recent_rewards = []; // 记录最近的奖励用于判断是否达到最优
                 this.stable_episodes_needed = 10; // 需要连续稳定的回合数
-                this.sarsa_optimal_reward = -15; // Sarsa的最优奖励（安全路径）
+                this.sarsa_optimal_reward = -18; // Sarsa的最优奖励阈值（考虑探索干扰）
             }
 
             takeAction(state) {
@@ -546,7 +549,7 @@
                 this.optimal_policy_episode = -1;
                 this.recent_rewards = [];
                 this.stable_episodes_needed = 10;
-                this.qlearning_optimal_reward = -13; // Q-learning的最优奖励（沿悬崖边缘）
+                this.qlearning_optimal_reward = -16; // Q-learning的最优奖励阈值（考虑探索干扰）
             }
 
             takeAction(state) {
@@ -670,7 +673,7 @@
                 this.optimal_policy_episode = -1;
                 this.recent_rewards = [];
                 this.stable_episodes_needed = 10;
-                this.sarsa_optimal_reward = -15;
+                this.sarsa_optimal_reward = -18;
             }
 
             takeAction(state) {
@@ -810,7 +813,7 @@
                 this.optimal_policy_episode = -1;
                 this.recent_rewards = [];
                 this.stable_episodes_needed = 10;
-                this.qlearning_optimal_reward = -13;
+                this.qlearning_optimal_reward = -16; // Q-learning的最优奖励阈值（考虑探索干扰）
             }
 
             takeAction(state) {
@@ -1820,6 +1823,10 @@
             clearCharts();
         });
 
+        document.getElementById('recheckPolicyBtn').addEventListener('click', function() {
+            recheckOptimalPolicies();
+        });
+
         // 移动平均窗口变化时更新图表
         document.getElementById('smoothingWindow').addEventListener('change', function() {
             updateCharts();
@@ -1892,7 +1899,8 @@
                 'trainBothBtn',
                 'stepBothBtn', 
                 'resetBothBtn',
-                'clearChartsBtn'
+                'clearChartsBtn',
+                'recheckPolicyBtn'
             ];
             
             buttons.forEach(buttonId => {
@@ -1925,6 +1933,37 @@
                     input.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
                     input.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        // 重新检查最优策略状态（用于已训练的算法）
+        function recheckOptimalPolicies() {
+            const agents = [
+                {agent: sarsaAgent, name: 'Sarsa'},
+                {agent: qlearningAgent, name: 'Q-learning'},
+                {agent: improvedSarsaAgent, name: 'Improved Sarsa'},
+                {agent: improvedQlearningAgent, name: 'Improved Q-learning'}
+            ];
+            
+            agents.forEach(({agent, name}) => {
+                if (agent.episode_rewards.length >= agent.stable_episodes_needed) {
+                    // 检查最近的回合是否达到最优策略
+                    const recentRewards = agent.episode_rewards.slice(-agent.stable_episodes_needed);
+                    const optimalThreshold = name.includes('Sarsa') ? agent.sarsa_optimal_reward : agent.qlearning_optimal_reward;
+                    
+                    const all_optimal = recentRewards.every(reward => reward >= optimalThreshold);
+                    if (all_optimal && !agent.optimal_policy_found) {
+                        agent.optimal_policy_found = true;
+                        agent.optimal_policy_episode = agent.episode_count - agent.stable_episodes_needed + 1;
+                    }
+                }
+                
+                // 更新显示
+                if (name.includes('Improved')) {
+                    showImprovedResults(name, agent);
+                } else {
+                    showResults(name, agent);
                 }
             });
         }
