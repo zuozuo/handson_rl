@@ -157,27 +157,30 @@
             border-radius: 8px;
         }
         .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            display: flex;
+            justify-content: center;
             margin: 20px 0;
         }
         .chart-wrapper {
             background-color: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             border: 1px solid #ddd;
+            width: 100%;
+            max-width: 1200px;
         }
         .chart-wrapper h3 {
             margin-top: 0;
             color: #333;
             text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
         }
         .single-chart {
             grid-column: 1 / -1;
         }
         canvas {
-            max-height: 400px;
+            height: 500px !important;
         }
         .stats-container {
             display: flex;
@@ -257,17 +260,9 @@
         <div class="charts-section">
             <h2>学习曲线分析</h2>
             <div class="charts-container">
-                <div class="chart-wrapper">
-                    <h3>Sarsa 学习曲线</h3>
-                    <canvas id="sarsaChart"></canvas>
-                </div>
-                <div class="chart-wrapper">
-                    <h3>Q-learning 学习曲线</h3>
-                    <canvas id="qlearningChart"></canvas>
-                </div>
                 <div class="chart-wrapper single-chart">
-                    <h3>Sarsa vs Q-learning 对比</h3>
-                    <canvas id="comparisonChart"></canvas>
+                    <h3>Sarsa vs Q-learning 综合学习曲线对比</h3>
+                    <canvas id="combinedChart"></canvas>
                 </div>
             </div>
         </div>
@@ -527,7 +522,7 @@
         let qlearningAgent = new QLearning(env.ncol, env.nrow);
 
         // 图表实例
-        let sarsaChart, qlearningChart, comparisonChart;
+        let combinedChart;
 
         // 移动平均计算函数
         function calculateMovingAverage(data, windowSize) {
@@ -543,149 +538,102 @@
 
         // 初始化图表
         function initializeCharts() {
-            // Sarsa图表
-            const sarsaCtx = document.getElementById('sarsaChart').getContext('2d');
-            sarsaChart = new Chart(sarsaCtx, {
+            // 综合图表
+            const combinedCtx = document.getElementById('combinedChart').getContext('2d');
+            combinedChart = new Chart(combinedCtx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Episode Reward',
+                        label: 'Sarsa Episode Reward',
                         data: [],
-                        borderColor: 'rgba(54, 162, 235, 0.6)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderColor: 'rgba(54, 162, 235, 0.4)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.05)',
                         borderWidth: 1,
-                        pointRadius: 0.5
+                        pointRadius: 0,
+                        fill: false
                     }, {
-                        label: 'Moving Average',
+                        label: 'Sarsa Moving Average',
                         data: [],
                         borderColor: 'rgba(255, 99, 132, 1)',
                         backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: 'Return'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Episodes'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    },
-                    animation: {
-                        duration: 0
-                    }
-                }
-            });
-
-            // Q-learning图表
-            const qlearningCtx = document.getElementById('qlearningChart').getContext('2d');
-            qlearningChart = new Chart(qlearningCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Episode Reward',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Q-learning Episode Reward',
                         data: [],
-                        borderColor: 'rgba(54, 162, 235, 0.6)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderColor: 'rgba(75, 192, 192, 0.4)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.05)',
                         borderWidth: 1,
-                        pointRadius: 0.5
+                        pointRadius: 0,
+                        fill: false
                     }, {
-                        label: 'Moving Average',
+                        label: 'Q-learning Moving Average',
                         data: [],
                         borderColor: 'rgba(255, 159, 64, 1)',
                         backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: {
                             beginAtZero: false,
                             title: {
                                 display: true,
-                                text: 'Return'
+                                text: 'Return',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                alpha: 0.3
                             }
                         },
                         x: {
                             title: {
                                 display: true,
-                                text: 'Episodes'
+                                text: 'Episodes',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                alpha: 0.3
                             }
                         }
                     },
                     plugins: {
                         legend: {
-                            display: true
-                        }
-                    },
-                    animation: {
-                        duration: 0
-                    }
-                }
-            });
-
-            // 对比图表
-            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
-            comparisonChart = new Chart(comparisonCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Sarsa',
-                        data: [],
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }, {
-                        label: 'Q-learning',
-                        data: [],
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: 'Return (Moving Average)'
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
                             }
                         },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Episodes'
-                            }
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 1
                         }
                     },
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
                     },
                     animation: {
                         duration: 0
@@ -698,33 +646,16 @@
         function updateCharts() {
             const windowSize = parseInt(document.getElementById('smoothingWindow').value);
             
-            // 更新Sarsa图表
-            if (sarsaAgent.episode_rewards.length > 0) {
-                const sarsaLabels = Array.from({length: sarsaAgent.episode_rewards.length}, (_, i) => i + 1);
-                const sarsaMovingAvg = calculateMovingAverage(sarsaAgent.episode_rewards, windowSize);
-                
-                sarsaChart.data.labels = sarsaLabels;
-                sarsaChart.data.datasets[0].data = sarsaAgent.episode_rewards;
-                sarsaChart.data.datasets[1].data = sarsaMovingAvg;
-                sarsaChart.update('none');
-            }
-
-            // 更新Q-learning图表
-            if (qlearningAgent.episode_rewards.length > 0) {
-                const qlearningLabels = Array.from({length: qlearningAgent.episode_rewards.length}, (_, i) => i + 1);
-                const qlearningMovingAvg = calculateMovingAverage(qlearningAgent.episode_rewards, windowSize);
-                
-                qlearningChart.data.labels = qlearningLabels;
-                qlearningChart.data.datasets[0].data = qlearningAgent.episode_rewards;
-                qlearningChart.data.datasets[1].data = qlearningMovingAvg;
-                qlearningChart.update('none');
-            }
-
-            // 更新对比图表
-            const maxEpisodes = Math.max(sarsaAgent.episode_rewards.length, qlearningAgent.episode_rewards.length);
+            // 确定最大回合数
+            const maxEpisodes = Math.max(
+                sarsaAgent.episode_rewards.length, 
+                qlearningAgent.episode_rewards.length
+            );
+            
             if (maxEpisodes > 0) {
-                const comparisonLabels = Array.from({length: maxEpisodes}, (_, i) => i + 1);
+                const labels = Array.from({length: maxEpisodes}, (_, i) => i + 1);
                 
+                // 计算移动平均
                 const sarsaMovingAvg = sarsaAgent.episode_rewards.length > 0 
                     ? calculateMovingAverage(sarsaAgent.episode_rewards, windowSize) 
                     : [];
@@ -732,10 +663,22 @@
                     ? calculateMovingAverage(qlearningAgent.episode_rewards, windowSize) 
                     : [];
 
-                comparisonChart.data.labels = comparisonLabels;
-                comparisonChart.data.datasets[0].data = sarsaMovingAvg;
-                comparisonChart.data.datasets[1].data = qlearningMovingAvg;
-                comparisonChart.update('none');
+                // 更新综合图表
+                combinedChart.data.labels = labels;
+                
+                // Sarsa数据
+                combinedChart.data.datasets[0].data = sarsaAgent.episode_rewards.length > 0 
+                    ? sarsaAgent.episode_rewards 
+                    : [];
+                combinedChart.data.datasets[1].data = sarsaMovingAvg;
+                
+                // Q-learning数据
+                combinedChart.data.datasets[2].data = qlearningAgent.episode_rewards.length > 0 
+                    ? qlearningAgent.episode_rewards 
+                    : [];
+                combinedChart.data.datasets[3].data = qlearningMovingAvg;
+                
+                combinedChart.update('none');
             }
         }
 
@@ -753,20 +696,12 @@
 
         // 清空图表
         function clearCharts() {
-            sarsaChart.data.labels = [];
-            sarsaChart.data.datasets[0].data = [];
-            sarsaChart.data.datasets[1].data = [];
-            sarsaChart.update();
-
-            qlearningChart.data.labels = [];
-            qlearningChart.data.datasets[0].data = [];
-            qlearningChart.data.datasets[1].data = [];
-            qlearningChart.update();
-
-            comparisonChart.data.labels = [];
-            comparisonChart.data.datasets[0].data = [];
-            comparisonChart.data.datasets[1].data = [];
-            comparisonChart.update();
+            combinedChart.data.labels = [];
+            combinedChart.data.datasets[0].data = [];
+            combinedChart.data.datasets[1].data = [];
+            combinedChart.data.datasets[2].data = [];
+            combinedChart.data.datasets[3].data = [];
+            combinedChart.update();
         }
 
         // 创建网格
