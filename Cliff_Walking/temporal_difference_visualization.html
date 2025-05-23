@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>时序差分算法可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -15,7 +16,7 @@
             color: #333;
         }
         .container {
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -149,11 +150,61 @@
             background-color: #e8f4fd;
             border-radius: 8px;
         }
+        .charts-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        .chart-wrapper {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .chart-wrapper h3 {
+            margin-top: 0;
+            color: #333;
+            text-align: center;
+        }
+        .single-chart {
+            grid-column: 1 / -1;
+        }
+        canvas {
+            max-height: 400px;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>时序差分算法可视化</h1>
+        <h1>时序差分算法可视化与学习曲线分析</h1>
         
         <div class="legend">
             <div class="legend-item">
@@ -175,8 +226,49 @@
             <button id="trainBothBtn">同时训练两个算法</button>
             <button id="stepBothBtn" class="step-btn">同时单步训练</button>
             <button id="resetBothBtn" class="reset-btn">重置所有算法</button>
+            <button id="clearChartsBtn" class="reset-btn">清空图表</button>
             <div style="margin-top: 10px;">
                 训练回合数: <input type="number" id="episodesInput" value="100" min="1" max="1000" style="width: 80px;">
+                移动平均窗口: <input type="number" id="smoothingWindow" value="20" min="5" max="100" style="width: 80px;">
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-value" id="sarsaEpisodes">0</div>
+                <div class="stat-label">Sarsa 训练回合</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="qlearningEpisodes">0</div>
+                <div class="stat-label">Q-learning 训练回合</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="sarsaAvgReward">0.00</div>
+                <div class="stat-label">Sarsa 平均奖励</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="qlearningAvgReward">0.00</div>
+                <div class="stat-label">Q-learning 平均奖励</div>
+            </div>
+        </div>
+
+        <!-- 学习曲线图表 -->
+        <div class="charts-section">
+            <h2>学习曲线分析</h2>
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Sarsa 学习曲线</h3>
+                    <canvas id="sarsaChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Q-learning 学习曲线</h3>
+                    <canvas id="qlearningChart"></canvas>
+                </div>
+                <div class="chart-wrapper single-chart">
+                    <h3>Sarsa vs Q-learning 对比</h3>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
             </div>
         </div>
         
@@ -434,6 +526,249 @@
         let sarsaAgent = new Sarsa(env.ncol, env.nrow);
         let qlearningAgent = new QLearning(env.ncol, env.nrow);
 
+        // 图表实例
+        let sarsaChart, qlearningChart, comparisonChart;
+
+        // 移动平均计算函数
+        function calculateMovingAverage(data, windowSize) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                const start = Math.max(0, i - windowSize + 1);
+                const subset = data.slice(start, i + 1);
+                const average = subset.reduce((sum, val) => sum + val, 0) / subset.length;
+                result.push(average);
+            }
+            return result;
+        }
+
+        // 初始化图表
+        function initializeCharts() {
+            // Sarsa图表
+            const sarsaCtx = document.getElementById('sarsaChart').getContext('2d');
+            sarsaChart = new Chart(sarsaCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Episode Reward',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 0.6)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 1,
+                        pointRadius: 0.5
+                    }, {
+                        label: 'Moving Average',
+                        data: [],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Return'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Episodes'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+
+            // Q-learning图表
+            const qlearningCtx = document.getElementById('qlearningChart').getContext('2d');
+            qlearningChart = new Chart(qlearningCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Episode Reward',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 0.6)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 1,
+                        pointRadius: 0.5
+                    }, {
+                        label: 'Moving Average',
+                        data: [],
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Return'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Episodes'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+
+            // 对比图表
+            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChart = new Chart(comparisonCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sarsa',
+                        data: [],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }, {
+                        label: 'Q-learning',
+                        data: [],
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Return (Moving Average)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Episodes'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            });
+        }
+
+        // 更新图表
+        function updateCharts() {
+            const windowSize = parseInt(document.getElementById('smoothingWindow').value);
+            
+            // 更新Sarsa图表
+            if (sarsaAgent.episode_rewards.length > 0) {
+                const sarsaLabels = Array.from({length: sarsaAgent.episode_rewards.length}, (_, i) => i + 1);
+                const sarsaMovingAvg = calculateMovingAverage(sarsaAgent.episode_rewards, windowSize);
+                
+                sarsaChart.data.labels = sarsaLabels;
+                sarsaChart.data.datasets[0].data = sarsaAgent.episode_rewards;
+                sarsaChart.data.datasets[1].data = sarsaMovingAvg;
+                sarsaChart.update('none');
+            }
+
+            // 更新Q-learning图表
+            if (qlearningAgent.episode_rewards.length > 0) {
+                const qlearningLabels = Array.from({length: qlearningAgent.episode_rewards.length}, (_, i) => i + 1);
+                const qlearningMovingAvg = calculateMovingAverage(qlearningAgent.episode_rewards, windowSize);
+                
+                qlearningChart.data.labels = qlearningLabels;
+                qlearningChart.data.datasets[0].data = qlearningAgent.episode_rewards;
+                qlearningChart.data.datasets[1].data = qlearningMovingAvg;
+                qlearningChart.update('none');
+            }
+
+            // 更新对比图表
+            const maxEpisodes = Math.max(sarsaAgent.episode_rewards.length, qlearningAgent.episode_rewards.length);
+            if (maxEpisodes > 0) {
+                const comparisonLabels = Array.from({length: maxEpisodes}, (_, i) => i + 1);
+                
+                const sarsaMovingAvg = sarsaAgent.episode_rewards.length > 0 
+                    ? calculateMovingAverage(sarsaAgent.episode_rewards, windowSize) 
+                    : [];
+                const qlearningMovingAvg = qlearningAgent.episode_rewards.length > 0 
+                    ? calculateMovingAverage(qlearningAgent.episode_rewards, windowSize) 
+                    : [];
+
+                comparisonChart.data.labels = comparisonLabels;
+                comparisonChart.data.datasets[0].data = sarsaMovingAvg;
+                comparisonChart.data.datasets[1].data = qlearningMovingAvg;
+                comparisonChart.update('none');
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('sarsaEpisodes').textContent = sarsaAgent.episode_count;
+            document.getElementById('qlearningEpisodes').textContent = qlearningAgent.episode_count;
+            
+            const sarsaAvgReward = sarsaAgent.episode_count > 0 ? (sarsaAgent.total_reward / sarsaAgent.episode_count).toFixed(2) : '0.00';
+            const qlearningAvgReward = qlearningAgent.episode_count > 0 ? (qlearningAgent.total_reward / qlearningAgent.episode_count).toFixed(2) : '0.00';
+            
+            document.getElementById('sarsaAvgReward').textContent = sarsaAvgReward;
+            document.getElementById('qlearningAvgReward').textContent = qlearningAvgReward;
+        }
+
+        // 清空图表
+        function clearCharts() {
+            sarsaChart.data.labels = [];
+            sarsaChart.data.datasets[0].data = [];
+            sarsaChart.data.datasets[1].data = [];
+            sarsaChart.update();
+
+            qlearningChart.data.labels = [];
+            qlearningChart.data.datasets[0].data = [];
+            qlearningChart.data.datasets[1].data = [];
+            qlearningChart.update();
+
+            comparisonChart.data.labels = [];
+            comparisonChart.data.datasets[0].data = [];
+            comparisonChart.data.datasets[1].data = [];
+            comparisonChart.update();
+        }
+
         // 创建网格
         function createGrid(gridId) {
             const gridContainer = document.getElementById(gridId);
@@ -550,6 +885,10 @@
             updatePolicyGrid(agent, `${gridPrefix}PolicyGrid`);
             updateValueGrid(agent, `${gridPrefix}ValueGrid`);
             showResults(algorithmName, agent);
+            
+            // 更新图表和统计信息
+            updateCharts();
+            updateStats();
         }
 
         // 重置算法
@@ -563,6 +902,10 @@
             updatePolicyGrid(agent, `${gridPrefix}PolicyGrid`);
             updateValueGrid(agent, `${gridPrefix}ValueGrid`);
             showResults(algorithmName, agent);
+            
+            // 更新图表和统计信息
+            updateCharts();
+            updateStats();
         }
 
         // 绑定事件监听器
@@ -607,10 +950,25 @@
             sarsaAgent = new Sarsa(env.ncol, env.nrow);
             qlearningAgent = new QLearning(env.ncol, env.nrow);
             initializeGrids();
+            updateCharts();
+            updateStats();
         });
 
-        // 初始化页面
-        initializeGrids();
+        document.getElementById('clearChartsBtn').addEventListener('click', function() {
+            clearCharts();
+        });
+
+        // 移动平均窗口变化时更新图表
+        document.getElementById('smoothingWindow').addEventListener('change', function() {
+            updateCharts();
+        });
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            initializeCharts();
+            initializeGrids();
+            updateStats();
+        });
     </script>
 </body>
 </html> 
