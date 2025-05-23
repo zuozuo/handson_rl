@@ -177,6 +177,44 @@
             </div>
         </div>
         
+        <!-- Learning Rate Analysis Section -->
+        <div class="bg-card rounded-lg border shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-6">学习率与收敛性深度分析</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Q值收敛过程对比 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">Q值收敛过程对比</h3>
+                    <div class="relative h-64">
+                        <canvas id="qValueChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 后期收敛细节 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">后期收敛细节 (最后100回合)</h3>
+                    <div class="relative h-64">
+                        <canvas id="lateStageChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 学习率衰减过程 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">学习率衰减过程</h3>
+                    <div class="relative h-64">
+                        <canvas id="learningRateChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 收敛稳定性指标 -->
+                <div class="bg-background rounded-lg border p-4">
+                    <h3 class="text-lg font-medium text-center mb-4">收敛稳定性指标</h3>
+                    <div class="relative h-64">
+                        <canvas id="stabilityChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Algorithms Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Sarsa Algorithm -->
@@ -370,6 +408,12 @@
                 this.episode_count = 0;
                 this.total_reward = 0;
                 this.episode_rewards = [];
+                
+                // 新增详细统计数据
+                this.q_value_history = []; // 记录特定状态的Q值变化
+                this.update_magnitudes = []; // 记录每次更新的幅度
+                this.td_errors = []; // 记录TD误差
+                this.target_state = 36; // 监控起始状态的Q值变化
             }
 
             takeAction(state) {
@@ -385,8 +429,19 @@
             }
 
             update(s0, a0, r, s1, a1) {
+                const old_q_value = this.Q_table[s0][a0];
                 const td_error = r + this.gamma * this.Q_table[s1][a1] - this.Q_table[s0][a0];
                 this.Q_table[s0][a0] += this.alpha * td_error;
+                
+                // 记录统计数据
+                const update_magnitude = Math.abs(this.Q_table[s0][a0] - old_q_value);
+                this.update_magnitudes.push(update_magnitude);
+                this.td_errors.push(Math.abs(td_error));
+                
+                // 记录目标状态的Q值变化
+                if (s0 === this.target_state) {
+                    this.q_value_history.push(Math.max(...this.Q_table[s0]));
+                }
             }
 
             trainEpisode(env) {
@@ -409,6 +464,12 @@
                 this.episode_count++;
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
+                
+                // 每回合结束时记录当前Q值
+                if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
+                    this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
+                }
+                
                 return episode_return;
             }
 
@@ -430,6 +491,12 @@
                 this.episode_count = 0;
                 this.total_reward = 0;
                 this.episode_rewards = [];
+                
+                // 新增详细统计数据
+                this.q_value_history = [];
+                this.update_magnitudes = [];
+                this.td_errors = [];
+                this.target_state = 36;
             }
 
             takeAction(state) {
@@ -445,8 +512,19 @@
             }
 
             update(s0, a0, r, s1) {
+                const old_q_value = this.Q_table[s0][a0];
                 const td_error = r + this.gamma * Math.max(...this.Q_table[s1]) - this.Q_table[s0][a0];
                 this.Q_table[s0][a0] += this.alpha * td_error;
+                
+                // 记录统计数据
+                const update_magnitude = Math.abs(this.Q_table[s0][a0] - old_q_value);
+                this.update_magnitudes.push(update_magnitude);
+                this.td_errors.push(Math.abs(td_error));
+                
+                // 记录目标状态的Q值变化
+                if (s0 === this.target_state) {
+                    this.q_value_history.push(Math.max(...this.Q_table[s0]));
+                }
             }
 
             trainEpisode(env) {
@@ -467,6 +545,12 @@
                 this.episode_count++;
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
+                
+                // 每回合结束时记录当前Q值
+                if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
+                    this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
+                }
+                
                 return episode_return;
             }
 
@@ -503,6 +587,12 @@
                 this.episode_rewards = [];
                 this.epsilon_history = [];
                 this.alpha_history = [];
+                
+                // 新增详细统计数据
+                this.q_value_history = [];
+                this.update_magnitudes = [];
+                this.td_errors = [];
+                this.target_state = 36;
             }
 
             takeAction(state) {
@@ -518,8 +608,19 @@
             }
 
             update(s0, a0, r, s1, a1) {
+                const old_q_value = this.Q_table[s0][a0];
                 const td_error = r + this.gamma * this.Q_table[s1][a1] - this.Q_table[s0][a0];
                 this.Q_table[s0][a0] += this.alpha * td_error;
+                
+                // 记录统计数据
+                const update_magnitude = Math.abs(this.Q_table[s0][a0] - old_q_value);
+                this.update_magnitudes.push(update_magnitude);
+                this.td_errors.push(Math.abs(td_error));
+                
+                // 记录目标状态的Q值变化
+                if (s0 === this.target_state) {
+                    this.q_value_history.push(Math.max(...this.Q_table[s0]));
+                }
             }
 
             decayParameters() {
@@ -556,6 +657,12 @@
                 this.episode_count++;
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
+                
+                // 每回合结束时记录当前Q值
+                if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
+                    this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
+                }
+                
                 return episode_return;
             }
 
@@ -592,6 +699,12 @@
                 this.episode_rewards = [];
                 this.epsilon_history = [];
                 this.alpha_history = [];
+                
+                // 新增详细统计数据
+                this.q_value_history = [];
+                this.update_magnitudes = [];
+                this.td_errors = [];
+                this.target_state = 36;
             }
 
             takeAction(state) {
@@ -607,8 +720,19 @@
             }
 
             update(s0, a0, r, s1) {
+                const old_q_value = this.Q_table[s0][a0];
                 const td_error = r + this.gamma * Math.max(...this.Q_table[s1]) - this.Q_table[s0][a0];
                 this.Q_table[s0][a0] += this.alpha * td_error;
+                
+                // 记录统计数据
+                const update_magnitude = Math.abs(this.Q_table[s0][a0] - old_q_value);
+                this.update_magnitudes.push(update_magnitude);
+                this.td_errors.push(Math.abs(td_error));
+                
+                // 记录目标状态的Q值变化
+                if (s0 === this.target_state) {
+                    this.q_value_history.push(Math.max(...this.Q_table[s0]));
+                }
             }
 
             decayParameters() {
@@ -643,6 +767,12 @@
                 this.episode_count++;
                 this.total_reward += episode_return;
                 this.episode_rewards.push(episode_return);
+                
+                // 每回合结束时记录当前Q值
+                if (this.q_value_history.length === 0 || this.q_value_history.length < this.episode_count) {
+                    this.q_value_history.push(Math.max(...this.Q_table[this.target_state]));
+                }
+                
                 return episode_return;
             }
 
@@ -668,16 +798,64 @@
 
         // 图表实例
         let combinedChart;
+        let qValueChart;
+        let lateStageChart;
+        let learningRateChart;
+        let stabilityChart;
 
         // 移动平均计算函数
-        function calculateMovingAverage(data, windowSize) {
+        function movingAverage(data, windowSize) {
             const result = [];
             for (let i = 0; i < data.length; i++) {
                 const start = Math.max(0, i - windowSize + 1);
-                const subset = data.slice(start, i + 1);
-                const average = subset.reduce((sum, val) => sum + val, 0) / subset.length;
-                result.push(average);
+                const window = data.slice(start, i + 1);
+                const avg = window.reduce((a, b) => a + b, 0) / window.length;
+                result.push(avg);
             }
+            return result;
+        }
+        
+        // 计算标准差（用于稳定性分析）
+        function calculateStandardDeviation(data) {
+            if (data.length === 0) return 0;
+            const mean = data.reduce((a, b) => a + b, 0) / data.length;
+            const variance = data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length;
+            return Math.sqrt(variance);
+        }
+        
+        // 计算滑动窗口标准差
+        function movingStandardDeviation(data, windowSize) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                const start = Math.max(0, i - windowSize + 1);
+                const window = data.slice(start, i + 1);
+                result.push(calculateStandardDeviation(window));
+            }
+            return result;
+        }
+        
+        // 计算滑动窗口内的平均值（用于平滑更新幅度数据）
+        function movingAverageOfMagnitudes(magnitudes, windowSize) {
+            const result = [];
+            let currentSum = 0;
+            let currentCount = 0;
+            
+            for (let i = 0; i < magnitudes.length; i++) {
+                currentSum += magnitudes[i];
+                currentCount++;
+                
+                if (currentCount >= windowSize) {
+                    result.push(currentSum / currentCount);
+                    currentSum = 0;
+                    currentCount = 0;
+                }
+            }
+            
+            // 处理最后不足窗口大小的数据
+            if (currentCount > 0) {
+                result.push(currentSum / currentCount);
+            }
+            
             return result;
         }
 
@@ -843,6 +1021,251 @@
                     }
                 }
             });
+            
+            // Q值收敛图表
+            const qValueCtx = document.getElementById('qValueChart').getContext('2d');
+            qValueChart = new Chart(qValueCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sarsa (固定LR)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Q-learning (固定LR)',
+                        data: [],
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Sarsa (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(147, 51, 234)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Q-learning (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(251, 146, 60)',
+                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: getDefaultChartOptions('Episodes', 'Q Value')
+            });
+            
+            // 后期收敛图表
+            const lateStageCtx = document.getElementById('lateStageChart').getContext('2d');
+            lateStageChart = new Chart(lateStageCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sarsa (固定LR)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Q-learning (固定LR)',
+                        data: [],
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Sarsa (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(147, 51, 234)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Q-learning (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(251, 146, 60)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: getDefaultChartOptions('Episodes', 'Q Value')
+            });
+            
+            // 学习率图表
+            const learningRateCtx = document.getElementById('learningRateChart').getContext('2d');
+            learningRateChart = new Chart(learningRateCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sarsa & Q-learning (固定LR)',
+                        data: [],
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        borderDash: [5, 5]
+                    }, {
+                        label: 'Improved Sarsa (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(147, 51, 234)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Q-learning (衰减LR)',
+                        data: [],
+                        borderColor: 'rgb(251, 146, 60)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: getDefaultChartOptions('Episodes', 'Learning Rate')
+            });
+            
+            // 稳定性图表
+            const stabilityCtx = document.getElementById('stabilityChart').getContext('2d');
+            stabilityChart = new Chart(stabilityCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sarsa 更新幅度',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Q-learning 更新幅度',
+                        data: [],
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Sarsa 更新幅度',
+                        data: [],
+                        borderColor: 'rgb(147, 51, 234)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Improved Q-learning 更新幅度',
+                        data: [],
+                        borderColor: 'rgb(251, 146, 60)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: getDefaultChartOptions('Episodes', 'Update Magnitude')
+            });
+        }
+        
+        // 获取默认图表配置
+        function getDefaultChartOptions(xLabel, yLabel) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: yLabel,
+                            font: {
+                                size: 12,
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            },
+                            color: 'hsl(215.4 16.3% 46.9%)'
+                        },
+                        grid: {
+                            color: 'hsl(214.3 31.8% 91.4%)',
+                            borderColor: 'hsl(214.3 31.8% 91.4%)'
+                        },
+                        ticks: {
+                            color: 'hsl(215.4 16.3% 46.9%)',
+                            font: {
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: xLabel,
+                            font: {
+                                size: 12,
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            },
+                            color: 'hsl(215.4 16.3% 46.9%)'
+                        },
+                        grid: {
+                            color: 'hsl(214.3 31.8% 91.4%)',
+                            borderColor: 'hsl(214.3 31.8% 91.4%)'
+                        },
+                        ticks: {
+                            color: 'hsl(215.4 16.3% 46.9%)',
+                            font: {
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 10,
+                            font: {
+                                size: 10,
+                                family: 'Inter, ui-sans-serif, system-ui'
+                            },
+                            color: 'hsl(222.2 84% 4.9%)'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'hsl(222.2 47.4% 11.2%)',
+                        titleColor: 'hsl(210 40% 98%)',
+                        bodyColor: 'hsl(210 40% 98%)',
+                        borderColor: 'hsl(214.3 31.8% 91.4%)',
+                        borderWidth: 1,
+                        titleFont: {
+                            family: 'Inter, ui-sans-serif, system-ui'
+                        },
+                        bodyFont: {
+                            family: 'Inter, ui-sans-serif, system-ui'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                animation: {
+                    duration: 200
+                }
+            };
         }
 
         // 更新图表
@@ -862,16 +1285,16 @@
                 
                 // 计算移动平均
                 const sarsaMovingAvg = sarsaAgent.episode_rewards.length > 0 
-                    ? calculateMovingAverage(sarsaAgent.episode_rewards, windowSize) 
+                    ? movingAverage(sarsaAgent.episode_rewards, windowSize) 
                     : [];
                 const qlearningMovingAvg = qlearningAgent.episode_rewards.length > 0 
-                    ? calculateMovingAverage(qlearningAgent.episode_rewards, windowSize) 
+                    ? movingAverage(qlearningAgent.episode_rewards, windowSize) 
                     : [];
                 const improvedSarsaMovingAvg = improvedSarsaAgent.episode_rewards.length > 0 
-                    ? calculateMovingAverage(improvedSarsaAgent.episode_rewards, windowSize) 
+                    ? movingAverage(improvedSarsaAgent.episode_rewards, windowSize) 
                     : [];
                 const improvedQlearningMovingAvg = improvedQlearningAgent.episode_rewards.length > 0 
-                    ? calculateMovingAverage(improvedQlearningAgent.episode_rewards, windowSize) 
+                    ? movingAverage(improvedQlearningAgent.episode_rewards, windowSize) 
                     : [];
 
                 // 更新综合图表
@@ -901,7 +1324,84 @@
                     : [];
                 combinedChart.data.datasets[7].data = improvedQlearningMovingAvg;
                 
-                combinedChart.update('none');
+                combinedChart.update();
+            }
+            
+            // 更新学习率分析图表
+            updateAnalysisCharts();
+        }
+        
+        // 更新学习率分析图表
+        function updateAnalysisCharts() {
+            const episodes = Array.from({length: Math.max(
+                sarsaAgent.episode_count,
+                qlearningAgent.episode_count,
+                improvedSarsaAgent.episode_count,
+                improvedQlearningAgent.episode_count
+            )}, (_, i) => i + 1);
+            
+            // 更新Q值收敛图表
+            if (qValueChart) {
+                qValueChart.data.labels = episodes;
+                qValueChart.data.datasets[0].data = sarsaAgent.q_value_history;
+                qValueChart.data.datasets[1].data = qlearningAgent.q_value_history;
+                qValueChart.data.datasets[2].data = improvedSarsaAgent.q_value_history;
+                qValueChart.data.datasets[3].data = improvedQlearningAgent.q_value_history;
+                qValueChart.update();
+            }
+            
+            // 更新后期收敛图表（最后100回合）
+            if (lateStageChart) {
+                const maxEpisodes = Math.max(episodes.length, 100);
+                const startEpisode = Math.max(0, maxEpisodes - 100);
+                const lateEpisodes = episodes.slice(startEpisode);
+                
+                lateStageChart.data.labels = lateEpisodes;
+                lateStageChart.data.datasets[0].data = sarsaAgent.q_value_history.slice(startEpisode);
+                lateStageChart.data.datasets[1].data = qlearningAgent.q_value_history.slice(startEpisode);
+                lateStageChart.data.datasets[2].data = improvedSarsaAgent.q_value_history.slice(startEpisode);
+                lateStageChart.data.datasets[3].data = improvedQlearningAgent.q_value_history.slice(startEpisode);
+                lateStageChart.update();
+            }
+            
+            // 更新学习率图表
+            if (learningRateChart) {
+                learningRateChart.data.labels = episodes;
+                
+                // 固定学习率（sarsa和q-learning）
+                const fixedLR = Array(episodes.length).fill(0.1);
+                learningRateChart.data.datasets[0].data = fixedLR;
+                
+                // 衰减学习率
+                learningRateChart.data.datasets[1].data = improvedSarsaAgent.alpha_history;
+                learningRateChart.data.datasets[2].data = improvedQlearningAgent.alpha_history;
+                learningRateChart.update();
+            }
+            
+            // 更新稳定性图表（更新幅度的移动平均）
+            if (stabilityChart) {
+                const windowSize = 100; // 用于平滑更新幅度数据的窗口大小
+                
+                const sarsaMagnitudes = movingAverageOfMagnitudes(sarsaAgent.update_magnitudes, windowSize);
+                const qlearningMagnitudes = movingAverageOfMagnitudes(qlearningAgent.update_magnitudes, windowSize);
+                const improvedSarsaMagnitudes = movingAverageOfMagnitudes(improvedSarsaAgent.update_magnitudes, windowSize);
+                const improvedQlearningMagnitudes = movingAverageOfMagnitudes(improvedQlearningAgent.update_magnitudes, windowSize);
+                
+                const maxMagnitudesLength = Math.max(
+                    sarsaMagnitudes.length,
+                    qlearningMagnitudes.length,
+                    improvedSarsaMagnitudes.length,
+                    improvedQlearningMagnitudes.length
+                );
+                
+                const magnitudeLabels = Array.from({length: maxMagnitudesLength}, (_, i) => (i + 1) * windowSize);
+                
+                stabilityChart.data.labels = magnitudeLabels;
+                stabilityChart.data.datasets[0].data = sarsaMagnitudes;
+                stabilityChart.data.datasets[1].data = qlearningMagnitudes;
+                stabilityChart.data.datasets[2].data = improvedSarsaMagnitudes;
+                stabilityChart.data.datasets[3].data = improvedQlearningMagnitudes;
+                stabilityChart.update();
             }
         }
 
