@@ -4,193 +4,354 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>悬崖漫步环境可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(222.2 84% 4.9%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(0 84.2% 60.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(0 0% 100%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .algorithm-container {
-            margin: 30px 0;
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        .grid-wrapper {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: nowrap;
-            margin: 20px auto;
+        :root {
+            --radius: 0.5rem;
         }
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 40px);
             grid-template-rows: repeat(4, 40px);
-            gap: 2px;
-            margin: 20px auto;
-            justify-content: center;
+            gap: 1px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid hsl(214.3 31.8% 91.4%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .grid-container:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         .cell {
             width: 40px;
             height: 40px;
-            border: 1px solid #ccc;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            font-weight: 600;
+            font-size: 11px;
+            background-color: white;
+            border-right: 1px solid hsl(214.3 31.8% 91.4%);
+            border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
+            transition: all 0.2s ease;
             position: relative;
-            background-color: #fff;
-            font-weight: bold;
-            padding: 2px;
+        }
+        .cell:nth-child(12n) {
+            border-right: none;
+        }
+        .cell:nth-last-child(-n+12) {
+            border-bottom: none;
+        }
+        .cell:hover {
+            background-color: hsl(210 40% 98%);
+            transform: scale(1.05);
+            z-index: 10;
         }
         .start {
-            background-color: #a8e6cf;
+            background: linear-gradient(135deg, hsl(142.1 76.2% 36.3%), hsl(142.1 76.2% 45%));
+            color: white;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
         .goal {
-            background-color: #dcedc1;
+            background: linear-gradient(135deg, hsl(47.9 95.8% 53.1%), hsl(47.9 95.8% 63.1%));
+            color: hsl(222.2 84% 4.9%);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
         .cliff {
-            background-color: #ff8b94;
-        }
-        .state-value {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-size: 12px;
-            color: #666;
+            background: linear-gradient(135deg, hsl(0 84.2% 60.2%), hsl(0 84.2% 70.2%));
+            color: white;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
         }
         .value-text {
-            font-weight: normal;
-            font-size: 12px;
-            color: #555;
+            font-weight: 400;
+            font-size: 9px;
+            color: hsl(215.4 16.3% 46.9%);
             margin-top: 2px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
-        .legend {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
+        .start .value-text, .cliff .value-text {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 0 10px;
+        .algorithm-card {
+            background: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 98%));
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-            border: 1px solid #ccc;
+        .algorithm-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        .controls {
-            margin: 20px 0;
-        }
-        button {
-            padding: 8px 15px;
-            background-color: #4CAF50;
+        .iteration-badge {
+            background: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 5px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 8px;
+            animation: pulse-slow;
         }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        #resetBtn {
-            background-color: #f44336;
-        }
-        #resetBtn:hover {
-            background-color: #d32f2f;
-        }
-        .reset-btn {
-            background-color: #f44336;
-        }
-        .reset-btn:hover {
-            background-color: #d32f2f;
+        .converged-badge {
+            background: linear-gradient(135deg, hsl(142.1 76.2% 36.3%), hsl(142.1 76.2% 46.3%));
+            animation: none;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>悬崖漫步环境可视化</h1>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color start"></div>
-                <span>起点</span>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div class="container mx-auto px-6 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-block p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl mb-6 shadow-lg">
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    悬崖漫步环境可视化
+                </h1>
+                <p class="text-blue-100 text-lg">
+                    基于动态规划的强化学习算法演示平台
+                </p>
             </div>
-            <div class="legend-item">
-                <div class="legend-color goal"></div>
-                <span>终点</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color cliff"></div>
-                <span>悬崖</span>
+            <div class="max-w-3xl mx-auto">
+                <p class="text-lg text-muted-foreground leading-relaxed">
+                    探索策略迭代与价值迭代算法在悬崖漫步环境中的学习过程，体验不同算法的收敛特性和策略差异
+                </p>
             </div>
         </div>
         
-        <div id="algorithmContainers">
-            <div id="policyIterationContainer" class="algorithm-container">
-                <h2>策略迭代</h2>
-                <div id="policyIterationResults" class="results"></div>
-                <div class="grid-wrapper">
-                    <div>
-                        <h3>最优策略</h3>
-                        <div class="grid-container" id="policyIterationPolicyGrid"></div>
+        <!-- Legend -->
+        <div class="flex justify-center items-center gap-8 mb-12 p-6 bg-card rounded-xl border shadow-sm animate-slide-up">
+            <h3 class="text-lg font-semibold text-gray-700">环境说明</h3>
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-green-500 to-green-600 shadow-sm"></div>
+                <span class="text-sm font-medium">起点 (S)</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-sm"></div>
+                <span class="text-sm font-medium">终点 (G)</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-red-500 to-red-600 shadow-sm"></div>
+                <span class="text-sm font-medium">悬崖 (C)</span>
+            </div>
+        </div>
+        
+        <!-- Algorithms -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <!-- Policy Iteration -->
+            <div class="algorithm-card p-8 animate-slide-up" style="animation-delay: 0.1s">
+                <div class="border-b border-gray-200 pb-6 mb-8">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl font-bold text-blue-700 flex items-center">
+                            <div class="w-3 h-3 bg-blue-600 rounded-full mr-3"></div>
+                            策略迭代算法
+                        </h2>
+                        <div class="text-right">
+                            <div class="text-xs text-muted-foreground">Policy Iteration</div>
+                            <div class="text-sm font-medium text-blue-600">贝尔曼期望方程</div>
+                        </div>
                     </div>
-                    <div>
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="policyIterationValueGrid"></div>
+                    <div id="policyIterationResults" class="mt-4 text-sm text-muted-foreground min-h-[24px]"></div>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-6 text-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            最优策略
+                        </h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="policyIterationPolicyGrid"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-6 text-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                            </svg>
+                            状态价值
+                        </h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="policyIterationValueGrid"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="controls">
-                    <button id="policyIterationBtn">运行策略迭代</button>
-                    <button id="singleStepPolicyBtn">运行一步迭代</button>
-                    <button id="resetPolicyIterationBtn" class="reset-btn">重置策略迭代</button>
+                
+                <div class="flex flex-wrap gap-3 mt-8 pt-6 border-t border-gray-200">
+                    <button id="policyIterationBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 shadow-md hover:shadow-lg">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        运行策略迭代
+                    </button>
+                    <button id="singleStepPolicyBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 shadow-sm hover:shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-4-6l3 3-3 3m-6-3h12"></path>
+                        </svg>
+                        单步执行
+                    </button>
+                    <button id="resetPolicyIterationBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2 shadow-sm hover:shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        重置
+                    </button>
                 </div>
             </div>
-            
-            <div id="valueIterationContainer" class="algorithm-container">
-                <h2>价值迭代</h2>
-                <div id="valueIterationResults" class="results"></div>
-                <div class="grid-wrapper">
-                    <div>
-                        <h3>最优策略</h3>
-                        <div class="grid-container" id="valueIterationPolicyGrid"></div>
+
+            <!-- Value Iteration -->
+            <div class="algorithm-card p-8 animate-slide-up" style="animation-delay: 0.2s">
+                <div class="border-b border-gray-200 pb-6 mb-8">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl font-bold text-green-700 flex items-center">
+                            <div class="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                            价值迭代算法
+                        </h2>
+                        <div class="text-right">
+                            <div class="text-xs text-muted-foreground">Value Iteration</div>
+                            <div class="text-sm font-medium text-green-600">贝尔曼最优方程</div>
+                        </div>
                     </div>
-                    <div>
-                        <h3>状态价值</h3>
-                        <div class="grid-container" id="valueIterationValueGrid"></div>
+                    <div id="valueIterationResults" class="mt-4 text-sm text-muted-foreground min-h-[24px]"></div>
+                </div>
+                
+                <div class="space-y-8">
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-6 text-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            最优策略
+                        </h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="valueIterationPolicyGrid"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-6 text-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                            </svg>
+                            状态价值
+                        </h3>
+                        <div class="flex justify-center">
+                            <div class="grid-container" id="valueIterationValueGrid"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="controls">
-                    <button id="valueIterationBtn">运行价值迭代</button>
-                    <button id="singleStepValueBtn">运行一步迭代</button>
-                    <button id="resetValueIterationBtn" class="reset-btn">重置价值迭代</button>
+                
+                <div class="flex flex-wrap gap-3 mt-8 pt-6 border-t border-gray-200">
+                    <button id="valueIterationBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 shadow-md hover:shadow-lg">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        运行价值迭代
+                    </button>
+                    <button id="singleStepValueBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 shadow-sm hover:shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-4-6l3 3-3 3m-6-3h12"></path>
+                        </svg>
+                        单步执行
+                    </button>
+                    <button id="resetValueIterationBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2 shadow-sm hover:shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-12 text-center">
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">算法对比说明</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                    <div class="flex items-start">
+                        <div class="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <div>
+                            <span class="font-medium text-blue-700">策略迭代：</span>
+                            先进行策略评估，再进行策略提升，直到策略收敛
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <div>
+                            <span class="font-medium text-green-700">价值迭代：</span>
+                            直接更新状态价值函数，最后提取最优策略
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
     <script>
         /**
          * 悬崖漫步环境
@@ -719,17 +880,6 @@
           }
         }
         
-        // 重置环境
-        function resetEnvironment() {
-          // 重新生成随机策略
-          randomPolicies = Array(env.nrow * env.ncol).fill().map(() => 
-            generateRandomPolicy()
-          );
-          
-          // 显示初始状态
-          showInitialState();
-        }
-        
         // 重置策略迭代环境
         function resetPolicyIteration() {
           // 重新生成随机策略
@@ -765,7 +915,7 @@
           // 清空结果区域
           document.getElementById('valueIterationResults').innerHTML = '';
         }
-        
+
         // 显示结果
         function showResults(algorithmName, agent, iterations) {
           const resultsId = algorithmName === '策略迭代' ? 'policyIterationResults' : 'valueIterationResults';
@@ -773,14 +923,36 @@
           let html = '';
           
           if (algorithmName === '策略迭代') {
-            html += `<p>策略迭代次数: ${iterations.policyIterations} | 每次策略评估的迭代次数: ${iterations.policyEvaluation.join(', ')} ${iterations.isComplete ? '| 策略已收敛!' : ''}</p>`;
+            const isComplete = iterations.isComplete;
+            const badgeClass = isComplete ? 'converged-badge' : 'iteration-badge';
+            html += `
+              <div class="flex items-center gap-2 text-sm">
+                <span>策略迭代次数:</span>
+                <span class="${badgeClass}">${iterations.policyIterations}</span>
+                <span>|</span>
+                <span>策略评估:</span>
+                <span class="text-blue-600 font-medium">[${iterations.policyEvaluation.join(', ')}]</span>
+                ${isComplete ? '<span class="text-green-600 font-semibold flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>策略已收敛!</span>' : ''}
+              </div>
+            `;
           } else {
-            html += `<p>价值迭代次数: ${iterations.iterationCount} | 最大误差: ${iterations.maxDelta?.toFixed(5) || 'N/A'} | ${iterations.isComplete ? '价值已收敛!' : ''}</p>`;
+            const isComplete = iterations.isComplete;
+            const badgeClass = isComplete ? 'converged-badge' : 'iteration-badge';
+            html += `
+              <div class="flex items-center gap-2 text-sm">
+                <span>价值迭代次数:</span>
+                <span class="${badgeClass}">${iterations.iterationCount}</span>
+                <span>|</span>
+                <span>最大误差:</span>
+                <span class="text-purple-600 font-medium">${iterations.maxDelta?.toFixed(5) || 'N/A'}</span>
+                ${isComplete ? '<span class="text-green-600 font-semibold flex items-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>价值已收敛!</span>' : ''}
+              </div>
+            `;
           }
           
           resultsDiv.innerHTML = html;
         }
-        
+
         // 全局算法实例
         let policyAgent = null;
         let valueAgent = null;
@@ -832,10 +1004,7 @@
           
           // 更新视图
           updateValueGrid(valueAgent, 'valueIterationValueGrid');
-          
-          // 每次迭代后都更新策略网格，不再需要等到迭代完成
           updatePolicyGrid(valueAgent, 'valueIterationPolicyGrid');
-          
           showResults('价值迭代', valueAgent, iterations);
         });
         
