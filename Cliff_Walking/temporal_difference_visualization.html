@@ -157,6 +157,29 @@
                     <input type="number" id="smoothingWindow" value="20" min="5" max="100" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
             </div>
+            
+            <!-- 迭代步数显示 -->
+            <div class="mt-6 p-4 bg-slate-50 rounded-lg border">
+                <h4 class="text-sm font-semibold mb-3 text-gray-700">算法训练进度</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-blue-600" id="sarsaSteps">0</div>
+                        <div class="text-xs text-muted-foreground">原始Sarsa</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600" id="qlearningSteps">0</div>
+                        <div class="text-xs text-muted-foreground">原始Q-learning</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-purple-600" id="improvedSarsaSteps">0</div>
+                        <div class="text-xs text-muted-foreground">改进Sarsa</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-orange-600" id="improvedQlearningSteps">0</div>
+                        <div class="text-xs text-muted-foreground">改进Q-learning</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Charts Section -->
@@ -1020,6 +1043,14 @@
             `;
         }
 
+        // 更新迭代步数显示
+        function updateStepsDisplay() {
+            document.getElementById('sarsaSteps').textContent = sarsaAgent.episode_count;
+            document.getElementById('qlearningSteps').textContent = qlearningAgent.episode_count;
+            document.getElementById('improvedSarsaSteps').textContent = improvedSarsaAgent.episode_count;
+            document.getElementById('improvedQlearningSteps').textContent = improvedQlearningAgent.episode_count;
+        }
+
         // 初始化所有网格
         function initializeGrids() {
             createGrid('sarsaPolicyGrid');
@@ -1045,6 +1076,7 @@
             showResults('Q-learning', qlearningAgent);
             showImprovedResults('Improved Sarsa', improvedSarsaAgent);
             showImprovedResults('Improved Q-learning', improvedQlearningAgent);
+            updateStepsDisplay();
         }
 
         // 训练函数
@@ -1082,6 +1114,7 @@
             
             // 更新图表
             updateCharts();
+            updateStepsDisplay();
         }
 
         // 重置算法
@@ -1127,6 +1160,7 @@
             
             // 更新图表
             updateCharts();
+            updateStepsDisplay();
         }
 
         // 绑定事件监听器
@@ -1152,6 +1186,7 @@
             improvedQlearningAgent = new ImprovedQLearning(env.ncol, env.nrow);
             initializeGrids();
             updateCharts();
+            updateStepsDisplay();
         });
 
         document.getElementById('clearChartsBtn').addEventListener('click', function() {
@@ -1167,6 +1202,7 @@
         window.addEventListener('load', function() {
             initializeCharts();
             initializeGrids();
+            updateStepsDisplay();
         });
     </script>
 </body>
