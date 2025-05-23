@@ -147,7 +147,7 @@
                     清空图表
                 </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-2">
                     <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">训练回合数</label>
                     <input type="number" id="episodesInput" value="500" min="1" max="1000" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
@@ -156,14 +156,12 @@
                     <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">移动平均窗口</label>
                     <input type="number" id="smoothingWindow" value="20" min="5" max="100" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
-            </div>
-            
-            <!-- 迭代步数显示 -->
-            <div class="mt-6 p-4 bg-slate-50 rounded-lg border">
-                <h4 class="text-sm font-semibold mb-3 text-gray-700">训练进度</h4>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-700" id="trainingSteps">0</div>
-                    <div class="text-sm text-muted-foreground">已训练回合数</div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">训练进度</label>
+                    <div class="flex h-10 w-full rounded-md border border-input bg-slate-50 px-3 py-2 items-center justify-center">
+                        <span class="text-lg font-bold text-gray-700" id="trainingSteps">0</span>
+                        <span class="text-sm text-muted-foreground ml-2">回合</span>
+                    </div>
                 </div>
             </div>
         </div>
