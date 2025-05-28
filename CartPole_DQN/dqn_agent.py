@@ -64,8 +64,13 @@ class DQNAgent:
         # 优化器
         self.optimizer = optim.Adam(self.q_network.parameters(), lr=learning_rate)
         
-        # 设备配置
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # 设备配置 - 支持Mac M系列GPU
+        if torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
         self.q_network.to(self.device)
         self.target_network.to(self.device)
     
