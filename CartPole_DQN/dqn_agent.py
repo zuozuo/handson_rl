@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import random
 from collections import deque
 import wandb
+import time
 
 # 定义Q网络结构
 class QNetwork(nn.Module):
@@ -40,10 +41,11 @@ class ReplayBuffer:
 class DQNAgent:
     def __init__(self, state_dim, action_dim, learning_rate=1e-3, gamma=0.99, 
                  epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995, 
-                 buffer_capacity=10000, batch_size=64, target_update=10):
+                 buffer_capacity=10000, batch_size=64, target_update=10, use_gpu=True):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma  # 折扣因子
+        self.use_gpu = use_gpu  # 是否使用GPU
         
         # epsilon贪婪策略参数
         self.epsilon = epsilon_start
@@ -53,6 +55,13 @@ class DQNAgent:
         # 经验回放参数
         self.buffer = ReplayBuffer(buffer_capacity)
         self.batch_size = batch_size
+        
+        # 训练时间统计
+        self.total_update_time = 0.0
+        self.update_count_for_timing = 0
+        self.data_transfer_time = 0.0
+        self.forward_time = 0.0
+        self.backward_time = 0.0
         
         # 创建Q网络和目标网络
         self.q_network = QNetwork(state_dim, action_dim)
@@ -65,14 +74,23 @@ class DQNAgent:
         self.optimizer = optim.Adam(self.q_network.parameters(), lr=learning_rate)
         
         # 设备配置 - 支持Mac M系列GPU
-        if torch.backends.mps.is_available():
-            self.device = torch.device("mps")
-        elif torch.cuda.is_available():
-            self.device = torch.device("cuda")
+        if self.use_gpu:
+            if torch.backends.mps.is_available():
+                self.device = torch.device("mps")
+            elif torch.cuda.is_available():
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+                print("警告: 请求使用GPU但GPU不可用，将使用CPU")
         else:
             self.device = torch.device("cpu")
+            
         self.q_network.to(self.device)
         self.target_network.to(self.device)
+        
+        print(f"使用设备: {self.device}")
+        print(f"GPU使用设置: {'启用' if self.use_gpu else '禁用'}")
+        print(f"实际使用设备类型: {self.device.type}")
     
     def select_action(self, state):
         # epsilon贪婪策略选择动作
@@ -97,16 +115,23 @@ class DQNAgent:
         if len(self.buffer) < self.batch_size:
             return
         
+        # 记录整个更新过程的开始时间
+        update_start_time = time.time()
+        
         # 从缓冲区中采样一批经验
         states, actions, rewards, next_states, dones = self.buffer.sample(self.batch_size)
         
-        # 转换为tensor
+        # 数据转换和传输到设备的时间统计
+        data_transfer_start = time.time()
         states = torch.FloatTensor(np.array(states)).to(self.device)
         actions = torch.LongTensor(actions).to(self.device)
         rewards = torch.FloatTensor(rewards).to(self.device)
         next_states = torch.FloatTensor(np.array(next_states)).to(self.device)
         dones = torch.FloatTensor(dones).to(self.device)
+        data_transfer_end = time.time()
         
+        # 前向传播时间统计
+        forward_start = time.time()
         # 计算当前Q值
         q_values = self.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
         
@@ -117,7 +142,10 @@ class DQNAgent:
         
         # 计算损失
         loss = F.mse_loss(q_values, target_q_values)
+        forward_end = time.time()
         
+        # 反向传播时间统计
+        backward_start = time.time()
         # 优化模型
         self.optimizer.zero_grad()
         loss.backward()
@@ -130,6 +158,23 @@ class DQNAgent:
                 total_norm += param_norm.item() ** 2
         total_norm = total_norm ** 0.5
         
+        self.optimizer.step()
+        backward_end = time.time()
+        
+        # 计算各阶段耗时
+        update_end_time = time.time()
+        total_update_time = update_end_time - update_start_time
+        data_transfer_time = data_transfer_end - data_transfer_start
+        forward_time = forward_end - forward_start
+        backward_time = backward_end - backward_start
+        
+        # 累积时间统计
+        self.total_update_time += total_update_time
+        self.update_count_for_timing += 1
+        self.data_transfer_time += data_transfer_time
+        self.forward_time += forward_time
+        self.backward_time += backward_time
+        
         # 记录Q值统计信息
         q_min = q_values.min().item()
         q_max = q_values.max().item()
@@ -138,22 +183,47 @@ class DQNAgent:
         target_q_max = target_q_values.max().item()
         target_q_mean = target_q_values.mean().item()
         
+        # 计算平均时间
+        avg_update_time = self.total_update_time / self.update_count_for_timing
+        avg_data_transfer_time = self.data_transfer_time / self.update_count_for_timing
+        avg_forward_time = self.forward_time / self.update_count_for_timing
+        avg_backward_time = self.backward_time / self.update_count_for_timing
+        
         # 记录到wandb（如果wandb可用）
         try:
             if wandb.run is not None:
                 wandb.log({
+                    # Q值统计
                     "train/q_min": q_min,
                     "train/q_max": q_max,
                     "train/q_mean": q_mean,
                     "train/target_q_min": target_q_min,
                     "train/target_q_max": target_q_max,
                     "train/target_q_mean": target_q_mean,
-                    "train/gradient_norm": total_norm
+                    "train/gradient_norm": total_norm,
+                    "train/loss": loss.item(),
+                    
+                    # 性能统计
+                    "performance/device_type": self.device.type,
+                    "performance/use_gpu": self.use_gpu,
+                    "performance/update_time_ms": total_update_time * 1000,
+                    "performance/avg_update_time_ms": avg_update_time * 1000,
+                    "performance/data_transfer_time_ms": data_transfer_time * 1000,
+                    "performance/avg_data_transfer_time_ms": avg_data_transfer_time * 1000,
+                    "performance/forward_time_ms": forward_time * 1000,
+                    "performance/avg_forward_time_ms": avg_forward_time * 1000,
+                    "performance/backward_time_ms": backward_time * 1000,
+                    "performance/avg_backward_time_ms": avg_backward_time * 1000,
+                    "performance/updates_per_second": 1.0 / avg_update_time if avg_update_time > 0 else 0,
+                    "performance/total_updates": self.update_count_for_timing,
+                    
+                    # 时间分布百分比
+                    "performance/data_transfer_ratio": (data_transfer_time / total_update_time) * 100 if total_update_time > 0 else 0,
+                    "performance/forward_ratio": (forward_time / total_update_time) * 100 if total_update_time > 0 else 0,
+                    "performance/backward_ratio": (backward_time / total_update_time) * 100 if total_update_time > 0 else 0,
                 })
         except:
             pass  # 如果wandb不可用，则忽略
-        
-        self.optimizer.step()
         
         # 更新目标网络
         self.update_count += 1
@@ -161,6 +231,48 @@ class DQNAgent:
             self.target_network.load_state_dict(self.q_network.state_dict())
         
         return loss.item()
+    
+    def get_performance_stats(self):
+        """获取性能统计信息"""
+        if self.update_count_for_timing == 0:
+            return {
+                "device": str(self.device),
+                "use_gpu": self.use_gpu,
+                "total_updates": 0,
+                "avg_update_time_ms": 0,
+                "avg_data_transfer_time_ms": 0,
+                "avg_forward_time_ms": 0,
+                "avg_backward_time_ms": 0,
+                "updates_per_second": 0
+            }
+        
+        avg_update_time = self.total_update_time / self.update_count_for_timing
+        avg_data_transfer_time = self.data_transfer_time / self.update_count_for_timing
+        avg_forward_time = self.forward_time / self.update_count_for_timing
+        avg_backward_time = self.backward_time / self.update_count_for_timing
+        
+        return {
+            "device": str(self.device),
+            "use_gpu": self.use_gpu,
+            "total_updates": self.update_count_for_timing,
+            "total_time_seconds": self.total_update_time,
+            "avg_update_time_ms": avg_update_time * 1000,
+            "avg_data_transfer_time_ms": avg_data_transfer_time * 1000,
+            "avg_forward_time_ms": avg_forward_time * 1000,
+            "avg_backward_time_ms": avg_backward_time * 1000,
+            "updates_per_second": 1.0 / avg_update_time if avg_update_time > 0 else 0,
+            "data_transfer_ratio": (avg_data_transfer_time / avg_update_time) * 100 if avg_update_time > 0 else 0,
+            "forward_ratio": (avg_forward_time / avg_update_time) * 100 if avg_update_time > 0 else 0,
+            "backward_ratio": (avg_backward_time / avg_update_time) * 100 if avg_update_time > 0 else 0
+        }
+    
+    def reset_performance_stats(self):
+        """重置性能统计信息"""
+        self.total_update_time = 0.0
+        self.update_count_for_timing = 0
+        self.data_transfer_time = 0.0
+        self.forward_time = 0.0
+        self.backward_time = 0.0
     
     def save(self, path):
         torch.save(self.q_network.state_dict(), path)
