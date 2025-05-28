@@ -15,8 +15,8 @@ def parse_args():
     parser.add_argument("--num_episodes", type=int, default=500, help="训练的总episode数")
     parser.add_argument("--max_steps", type=int, default=500, help="每个episode的最大步数")
     parser.add_argument("--batch_size", type=int, default=256, help="批量大小")
-    parser.add_argument("--hidden_dim", type=int, default=256, help="隐藏层大小")
-    parser.add_argument("--gpu_batch_size", type=int, default=512, help="GPU训练时的批量大小")
+    parser.add_argument("--hidden_dim", type=int, default=512, help="隐藏层大小")
+    parser.add_argument("--gpu_batch_size", type=int, default=1024, help="GPU训练时的批量大小")
     parser.add_argument("--cpu_batch_size", type=int, default=64, help="CPU训练时的批量大小")
     parser.add_argument("--learning_rate", type=float, default=1e-3, help="学习率")
     parser.add_argument("--gamma", type=float, default=0.99, help="折扣因子")
@@ -318,9 +318,18 @@ if __name__ == "__main__":
     print("DQN训练配置信息:")
     print(f"环境: {env_name}")
     print(f"训练episodes: {num_episodes}")
+    print(f"批量大小: {actual_batch_size}")
+    print(f"隐藏层大小: {actual_hidden_dim}")
     print(f"GPU设置: {'启用' if use_gpu else '禁用'}")
     print(f"实际使用设备: {agent.device}")
     print(f"设备类型: {agent.device.type}")
+    
+    # 计算网络参数量
+    total_params = sum(p.numel() for p in agent.q_network.parameters())
+    trainable_params = sum(p.numel() for p in agent.q_network.parameters() if p.requires_grad)
+    print(f"网络总参数量: {total_params:,}")
+    print(f"可训练参数量: {trainable_params:,}")
+    
     if hasattr(torch.backends, 'mps'):
         print(f"MPS可用: {torch.backends.mps.is_available()}")
     print(f"CUDA可用: {torch.cuda.is_available()}")

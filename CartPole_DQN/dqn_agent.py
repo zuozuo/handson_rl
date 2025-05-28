@@ -13,16 +13,26 @@ import argparse
 class QNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=256):
         super(QNetwork, self).__init__()
+        # 创建更深更宽的网络
         self.fc1 = nn.Linear(state_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc4 = nn.Linear(hidden_dim, action_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim * 2)  # 扩大到512
+        self.fc3 = nn.Linear(hidden_dim * 2, hidden_dim * 2)  # 512
+        self.fc4 = nn.Linear(hidden_dim * 2, hidden_dim)  # 收缩到256
+        self.fc5 = nn.Linear(hidden_dim, hidden_dim)  # 256
+        self.fc6 = nn.Linear(hidden_dim, action_dim)
+        self.dropout = nn.Dropout(0.1)  # 添加dropout
         
     def forward(self, x):
         x = F.relu(self.fc1(x))
+        x = self.dropout(x)
         x = F.relu(self.fc2(x))
+        x = self.dropout(x)
         x = F.relu(self.fc3(x))
-        return self.fc4(x)
+        x = self.dropout(x)
+        x = F.relu(self.fc4(x))
+        x = self.dropout(x)
+        x = F.relu(self.fc5(x))
+        return self.fc6(x)
 
 # 定义经验回放缓冲区
 class ReplayBuffer:
