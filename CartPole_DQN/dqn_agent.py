@@ -11,16 +11,18 @@ import argparse
 
 # 定义Q网络结构
 class QNetwork(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_dim=64):
+    def __init__(self, state_dim, action_dim, hidden_dim=256):
         super(QNetwork, self).__init__()
         self.fc1 = nn.Linear(state_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, action_dim)
+        self.fc3 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc4 = nn.Linear(hidden_dim, action_dim)
         
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        return self.fc3(x)
+        x = F.relu(self.fc3(x))
+        return self.fc4(x)
 
 # 定义经验回放缓冲区
 class ReplayBuffer:
@@ -42,7 +44,7 @@ class ReplayBuffer:
 class DQNAgent:
     def __init__(self, state_dim, action_dim, learning_rate=1e-3, gamma=0.99, 
                  epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995, 
-                 buffer_capacity=10000, batch_size=64, target_update=10, use_gpu=True):
+                 buffer_capacity=10000, batch_size=64, target_update=10, use_gpu=True, hidden_dim=256):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma  # 折扣因子
@@ -65,8 +67,8 @@ class DQNAgent:
         self.backward_time = 0.0
         
         # 创建Q网络和目标网络
-        self.q_network = QNetwork(state_dim, action_dim)
-        self.target_network = QNetwork(state_dim, action_dim)
+        self.q_network = QNetwork(state_dim, action_dim, hidden_dim)
+        self.target_network = QNetwork(state_dim, action_dim, hidden_dim)
         self.target_network.load_state_dict(self.q_network.state_dict())
         self.target_update = target_update
         self.update_count = 0

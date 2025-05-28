@@ -14,7 +14,10 @@ def parse_args():
     parser.add_argument("--env_name", type=str, default="CartPole-v1", help="环境名称")
     parser.add_argument("--num_episodes", type=int, default=500, help="训练的总episode数")
     parser.add_argument("--max_steps", type=int, default=500, help="每个episode的最大步数")
-    parser.add_argument("--batch_size", type=int, default=64, help="批量大小")
+    parser.add_argument("--batch_size", type=int, default=256, help="批量大小")
+    parser.add_argument("--hidden_dim", type=int, default=256, help="隐藏层大小")
+    parser.add_argument("--gpu_batch_size", type=int, default=512, help="GPU训练时的批量大小")
+    parser.add_argument("--cpu_batch_size", type=int, default=64, help="CPU训练时的批量大小")
     parser.add_argument("--learning_rate", type=float, default=1e-3, help="学习率")
     parser.add_argument("--gamma", type=float, default=0.99, help="折扣因子")
     parser.add_argument("--epsilon_start", type=float, default=1.0, help="初始epsilon值")
@@ -206,6 +209,9 @@ if __name__ == "__main__":
     num_episodes = args.num_episodes
     max_steps = args.max_steps
     batch_size = args.batch_size
+    hidden_dim = args.hidden_dim
+    gpu_batch_size = args.gpu_batch_size
+    cpu_batch_size = args.cpu_batch_size
     learning_rate = args.learning_rate
     gamma = args.gamma
     epsilon_start = args.epsilon_start
@@ -228,6 +234,18 @@ if __name__ == "__main__":
         use_gpu = True
         print("自动检测GPU设备")
     
+    # 根据设备类型优化参数
+    if use_gpu and (torch.backends.mps.is_available() or torch.cuda.is_available()):
+        # GPU优化参数
+        actual_batch_size = gpu_batch_size
+        actual_hidden_dim = hidden_dim
+        print(f"GPU优化: 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim}")
+    else:
+        # CPU优化参数  
+        actual_batch_size = cpu_batch_size
+        actual_hidden_dim = 64  # CPU使用较小的网络
+        print(f"CPU优化: 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim}")
+    
     # 生成运行名称
     device_suffix = "gpu" if use_gpu else "cpu"
     run_name = f"{env_name}_{device_suffix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -243,7 +261,10 @@ if __name__ == "__main__":
                 "env_name": env_name,
                 "num_episodes": num_episodes,
                 "max_steps": max_steps,
-                "batch_size": batch_size,
+                "batch_size": actual_batch_size,
+                "hidden_dim": actual_hidden_dim,
+                "gpu_batch_size": gpu_batch_size,
+                "cpu_batch_size": cpu_batch_size,
                 "learning_rate": learning_rate,
                 "gamma": gamma,
                 "epsilon_start": epsilon_start,
@@ -274,9 +295,10 @@ if __name__ == "__main__":
         epsilon_end=epsilon_end,
         epsilon_decay=epsilon_decay,
         buffer_capacity=buffer_capacity,
-        batch_size=batch_size,
+        batch_size=actual_batch_size,
         target_update=target_update,
-        use_gpu=use_gpu
+        use_gpu=use_gpu,
+        hidden_dim=actual_hidden_dim
     )
 
     # 创建视频目录
