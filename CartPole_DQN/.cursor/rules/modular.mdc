@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+在实现代码的时候一定要特别注意代码的模块化和可维护性！！！

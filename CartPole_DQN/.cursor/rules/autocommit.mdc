@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# auto commit
+
+每完成一次编辑之后根据编辑的内容自动生成一个有效的commit message，然后执行 git commit 命令
