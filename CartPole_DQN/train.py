@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument("--render", action="store_true", help="是否渲染环境")
     parser.add_argument("--use_gpu", action="store_true", help="是否使用GPU加速训练")
     parser.add_argument("--no_gpu", action="store_true", help="强制使用CPU训练")
+    parser.add_argument("--fair_comparison", action="store_true", help="CPU和GPU使用相同参数进行公平对比")
     parser.add_argument("--wandb_project", type=str, default="Cartpole_DQN", help="Weights & Biases项目名称")
     parser.add_argument("--wandb_entity", type=str, default="zuozuo", help="Weights & Biases实体名称")
     parser.add_argument("--wandb_tags", type=str, default="", help="Weights & Biases标签，用逗号分隔")
@@ -239,12 +240,19 @@ if __name__ == "__main__":
         # GPU优化参数
         actual_batch_size = gpu_batch_size
         actual_hidden_dim = hidden_dim
-        print(f"GPU优化: 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim}")
+        print(f"GPU训练: 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim}")
     else:
-        # CPU优化参数  
-        actual_batch_size = cpu_batch_size
-        actual_hidden_dim = 64  # CPU使用较小的网络
-        print(f"CPU优化: 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim}")
+        # CPU参数选择
+        if args.fair_comparison:
+            # 公平对比模式：CPU使用相同参数
+            actual_batch_size = gpu_batch_size
+            actual_hidden_dim = hidden_dim
+            print(f"CPU训练(公平对比): 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim} (与GPU相同)")
+        else:
+            # 优化模式：CPU使用适合的小参数
+            actual_batch_size = cpu_batch_size
+            actual_hidden_dim = 64
+            print(f"CPU训练(优化): 批量大小={actual_batch_size}, 隐藏层大小={actual_hidden_dim} (CPU优化)")
     
     # 生成运行名称
     device_suffix = "gpu" if use_gpu else "cpu"
@@ -274,6 +282,7 @@ if __name__ == "__main__":
                 "target_update": target_update,
                 "eval_interval": eval_interval,
                 "use_gpu": use_gpu,
+                "fair_comparison": args.fair_comparison,
                 "device_type": "auto" if not args.no_gpu and not args.use_gpu else ("gpu" if use_gpu else "cpu"),
                 "gpu_available_mps": torch.backends.mps.is_available() if hasattr(torch.backends, 'mps') else False,
                 "gpu_available_cuda": torch.cuda.is_available(),
